@@ -121,3 +121,11 @@ class DOIMappingRepository(BaseRepository):
 
     def get_new_doi(self, old_doi: str) -> str:
         return self.model.query.filter_by(dataset_doi_old=old_doi).first()
+
+class DatasetRatingRepository(BaseRepository):
+    def __init__(self):
+        super().__init__(DatasetRating)
+
+    def calculate_avg_rating(self, dataset_id: int) -> float:
+        avg_rating = self.model.query.with_entities(func.avg(self.model.rating)).filter_by(dataset_id=dataset_id).scalar()
+        return avg_rating if avg_rating is not None else 0.0
