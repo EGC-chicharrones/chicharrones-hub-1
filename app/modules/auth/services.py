@@ -31,6 +31,8 @@ class AuthenticationService(BaseService):
             password = kwargs.pop("password", None)
             name = kwargs.pop("name", None)
             surname = kwargs.pop("surname", None)
+            is_developer = kwargs.pop("is_developer", None)
+            github_username = kwargs.pop("github_username", None)
 
             if not email:
                 raise ValueError("Email is required.")
@@ -40,12 +42,17 @@ class AuthenticationService(BaseService):
                 raise ValueError("Name is required.")
             if not surname:
                 raise ValueError("Surname is required.")
+            if not isinstance(is_developer, bool):
+                raise ValueError("Developer field must be a boolean value.")
+            if is_developer and not github_username:
+                raise ValueError("Developer must have a github username.")
 
             user_data = {
                 "email": email,
-                "password": password
+                "password": password,
+                "is_developer": is_developer,
+                "github_username": github_username
             }
-
             profile_data = {
                 "name": name,
                 "surname": surname,

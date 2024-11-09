@@ -12,7 +12,7 @@ class AuthSeeder(BaseSeeder):
         # Seeding users
         users = [
             User(email='user1@example.com', password='1234'),
-            User(email='user2@example.com', password='1234'),
+            User(email='user2@example.com', password='1234', is_developer=True, github_username="Chicharrones_lover")
         ]
 
         # Inserted users with their assigned IDs are returned by `self.seed`.
@@ -28,7 +28,7 @@ class AuthSeeder(BaseSeeder):
                 "orcid": "",
                 "affiliation": "Some University",
                 "name": name[0],
-                "surname": name[1],
+                "surname": name[1]
             }
             user_profile = UserProfile(**profile_data)
             user_profiles.append(user_profile)
