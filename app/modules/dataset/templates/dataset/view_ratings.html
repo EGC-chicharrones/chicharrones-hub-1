@@ -1,0 +1,69 @@
+{% extends "base_template.html" %}
+
+{% block title %}View Ratings for {{ dataset.ds_meta_data.title }}{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Ratings for Dataset: {{ dataset.ds_meta_data.title }}</h1>
+
+<div class="col-12 mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Add a Rating</h5>
+            <form action="{{ url_for('dataset.create_rating', dataset_id=dataset.id) }}" method="post">
+                <div class="row">
+                    <div class="col-md-2">
+                        <label for="value" class="form-label">Rating (0-5)</label>
+                        <input type="number" class="form-control" id="value" name="value" min="0" max="5" required>
+                    </div>
+                    <div class="col-md-10">
+                        <label for="comment" class="form-label">Comment (optional)</label>
+                        <textarea class="form-control" id="comment" name="comment" maxlength="155" rows="2" placeholder="Enter your comment here (max 155 characters)"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Submit Rating</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if ratings %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5>Ratings</h5>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rating in ratings %}
+                            <tr>
+                                <td>{{ rating.user_id }}</td>
+                                <td>{{ rating.value }}</td>
+                                <td>{{ rating.comment or "No comment" }}</td>
+                                <td>{{ rating.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted text-center">
+                    <em>No ratings available for this dataset yet.</em>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

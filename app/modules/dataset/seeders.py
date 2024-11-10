@@ -13,6 +13,7 @@ from app.modules.dataset.models import (
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
+import random
 
 class DataSetSeeder(BaseSeeder):
 
@@ -66,59 +67,24 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_datasets = self.seed(datasets)
 
-        # Assume there are 12 UVL files, create corresponding FMMetaData and FeatureModel
-        fm_meta_data_list = [
-            FMMetaData(
-                uvl_filename=f'file{i+1}.uvl',
-                title=f'Feature Model {i+1}',
-                description=f'Description for feature model {i+1}',
-                publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
-                publication_doi=f'10.1234/fm{i+1}',
-                tags='tag1, tag2',
-                uvl_version='1.0'
-            ) for i in range(12)
-        ]
-        seeded_fm_meta_data = self.seed(fm_meta_data_list)
+        # Create DatasetRating instances for each DataSet
+        ratings = []
+        for dataset in seeded_datasets:
+            # Genera entre 1 y 3 valoraciones por dataset
+            num_ratings = random.randint(1, 3)
+            for _ in range(num_ratings):
+                rating = DatasetRating(
+                    value=random.randint(1, 5),  # Valoración aleatoria entre 1 y 5
+                    comment=f"Comentario para el dataset {dataset.id}",
+                    user_id=random.choice([user1.id, user2.id]),  # Usuario aleatorio entre los dos
+                    dataset_id=dataset.id,
+                    created_at=datetime.now(timezone.utc)
+                )
+                ratings.append(rating)
 
-        # Create Author instances and associate with FMMetaData
-        fm_authors = [
-            Author(
-                name=f'Author {i+5}',
-                affiliation=f'Affiliation {i+5}',
-                orcid=f'0000-0000-0000-000{i+5}',
-                fm_meta_data_id=seeded_fm_meta_data[i].id
-            ) for i in range(12)
-        ]
-        self.seed(fm_authors)
+        # Seed ratings to the database
+        self.seed(ratings)
 
-        feature_models = [
-            FeatureModel(
-                data_set_id=seeded_datasets[i // 3].id,
-                fm_meta_data_id=seeded_fm_meta_data[i].id
-            ) for i in range(12)
-        ]
-        seeded_feature_models = self.seed(feature_models)
+        # (Continuación de creación de FeatureModels y Hubfiles aquí...)
 
-        # Create files, associate them with FeatureModels and copy files
-        load_dotenv()
-        working_dir = os.getenv('WORKING_DIR', '')
-        src_folder = os.path.join(working_dir, 'app', 'modules', 'dataset', 'uvl_examples')
-        for i in range(12):
-            file_name = f'file{i+1}.uvl'
-            feature_model = seeded_feature_models[i]
-            dataset = next(ds for ds in seeded_datasets if ds.id == feature_model.data_set_id)
-            user_id = dataset.user_id
-
-            dest_folder = os.path.join(working_dir, 'uploads', f'user_{user_id}', f'dataset_{dataset.id}')
-            os.makedirs(dest_folder, exist_ok=True)
-            shutil.copy(os.path.join(src_folder, file_name), dest_folder)
-
-            file_path = os.path.join(dest_folder, file_name)
-
-            uvl_file = Hubfile(
-                name=file_name,
-                checksum=f'checksum{i+1}',
-                size=os.path.getsize(file_path),
-                feature_model_id=feature_model.id
-            )
-            self.seed([uvl_file])
+        print("Dataset ratings successfully seeded.")

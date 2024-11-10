@@ -154,8 +154,22 @@
 
                 </div>
 
-                
+                <div class="row mb-4">
+                    <div class="col-md-4 col-12">
+                        <span class=" text-secondary">
+                            Rating
+                        </span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-warning text-dark">{{ dataset.rating }} /5</span> 
+                            <a href="{{ url_for('dataset.create_rating', dataset_id=dataset.id) }}" class="btn btn-outline-primary btn-sm ms-3" style="border-radius: 5px;">
+                                <i data-feather="star" class="center-button-icon"></i> Ratings
+                            </a>
+                        </div>
+                    </div>
 
+                </div>
             </div>
 
             {% if dataset.ds_meta_data.dataset_doi %}
