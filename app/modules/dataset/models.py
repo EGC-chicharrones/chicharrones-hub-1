@@ -79,7 +79,7 @@ class DataSet(db.Model):
     ds_meta_data = db.relationship('DSMetaData', backref=db.backref('data_set', uselist=False))
     feature_models = db.relationship('FeatureModel', backref='data_set', lazy=True, cascade="all, delete")
 
-    ratings = db.relationship('DatasetRating', backref='dataset', lazy=True, cascade="all, delete-orphan")
+    # ratings = db.relationship('DatasetRating', backref='dataset', lazy=True, cascade="all, delete-orphan")
 
 
     def name(self):
@@ -131,7 +131,7 @@ class DataSet(db.Model):
             'files_count': self.get_files_count(),
             'total_size_in_bytes': self.get_file_total_size(),
             'total_size_in_human_format': self.get_file_total_size_for_human(),
-            'ratings': [rating.to_dict() for rating in self.ratings],
+            # 'ratings': [rating.to_dict() for rating in self.ratings],
         }
 
     def __repr__(self):
@@ -170,18 +170,45 @@ class DOIMapping(db.Model):
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
 
+# class DatasetRating(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     rating = db.Column(db.Integer, nullable=False) #ToDo: Calificación del 1 al 5
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=False)
+#     comment = db.Column(db.Text, nullable = True)
+
+#     #ToDo: A lo mejor, esto no sirve
+#     def to_dict(self):
+#         return {
+#             'rating': self.rating,
+#             'comment': self.comment,
+#             'user_id': self.user_id,
+#             'dataset_id': self.dataset_id
+#         }
+
 class DatasetRating(db.Model):
+    __tablename__ = 'dataset_rating'
+
     id = db.Column(db.Integer, primary_key=True)
-    rating = db.Column(db.Integer, nullable=False) #ToDo: Calificación del 1 al 5
+    value = db.Column(db.Integer, nullable=False)  # Calificación (por ejemplo, escala de 1 a 5)
+    comment = db.Column(db.Text, nullable=True)  # Comentario opcional del usuario
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=False)
-    comment = db.Column(db.Text, nullable = True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    #ToDo: A lo mejor, esto no sirve
+    # Relación con el usuario y el dataset
+    user = db.relationship('User', backref='dataset_ratings')
+    dataset = db.relationship('DataSet', backref='dataset_ratings')
+
     def to_dict(self):
         return {
-            'rating': self.rating,
+            'id': self.id,
+            'value': self.value,
             'comment': self.comment,
             'user_id': self.user_id,
-            'dataset_id': self.dataset_id
+            'dataset_id': self.dataset_id,
+            'created_at': self.created_at.isoformat()
         }
+
+    def __repr__(self):
+        return f'DatasetRating<User={self.user_id}, Dataset={self.dataset_id}, Value={self.value}>'

@@ -19,7 +19,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from app.modules.dataset.forms import DataSetForm
+from app.modules.dataset.forms import DataSetForm, RatingForm
 from app.modules.dataset.models import (
     DSDownloadRecord
 )
@@ -278,3 +278,27 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     return render_template("dataset/view_dataset.html", dataset=dataset)
+
+@dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['GET', 'POST'])
+@login_required
+def create_rating(dataset_id):
+    form = RatingForm()
+    if form.validate_on_submit():
+        result = DataSetService.create_rating(
+            dataset_id=dataset_id,
+            user_id=current_user.id,
+            value=form.value.data,
+            comment=form.comment.data
+        )
+        
+        # Manejo de la respuesta del servicio
+        # return dataset_service.handle_service_response(
+        #     result=result,
+        #     errors=form.errors,
+        #     success_url_redirect=url_for('dataset.list_ratings', dataset_id=dataset_id),
+        #     success_msg='Rating created successfully!',
+        #     error_template='dataset/create_rating.html',
+        #     form=form
+        # )
+
+    return render_template('dataset/create_rating.html', form=form)

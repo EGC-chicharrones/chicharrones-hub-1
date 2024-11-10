@@ -7,6 +7,8 @@ import uuid
 
 from flask import request
 
+from app import db
+
 from app.modules.auth.services import AuthenticationService
 from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData
 from app.modules.dataset.repositories import (
@@ -139,6 +141,30 @@ class DataSetService(BaseService):
     def get_uvlhub_doi(self, dataset: DataSet) -> str:
         domain = os.getenv('DOMAIN', 'localhost')
         return f'http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}'
+
+    def create_rating(dataset_id, user_id, value, comment=None):
+        try:
+        # Crea una nueva instancia de DatasetRating
+            rating = DatasetRating(
+                dataset_id=dataset_id,
+                user_id=user_id,
+                value=value,
+                comment=comment
+            )
+            db.session.add(rating)
+            db.session.commit()
+            return {'status': 'success', 'data': rating}
+        except Exception as e:
+            db.session.rollback()
+            return {'status': 'error', 'message': str(e)}
+
+    def handle_service_response(result, errors, success_url_redirect, success_msg, error_template, form):
+        if result['status'] == 'success':
+            flash(success_msg, 'success')
+            return redirect(success_url_redirect)
+        else:
+            flash(f"Error: {result['message']}", 'danger')
+            return render_template(error_template, form=form, errors=errors)
 
 
 class AuthorService(BaseService):
