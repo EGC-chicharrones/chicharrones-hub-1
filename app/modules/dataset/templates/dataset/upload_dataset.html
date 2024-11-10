@@ -218,6 +218,8 @@
 
             <div id="uploaded_models_form" style="padding-left: 2rem">
 
+                <p>Accepted file types: .uvl, .zip. If you upload a .zip, only its .uvl files will be imported.</p>
+
                 <form action="{{ url_for('dataset.upload') }}" class="dropzone" id="myDropzone">
                     <div id="dropzone-text"></div>
                 </form>
@@ -261,15 +263,16 @@
 
                                 console.log("File uploaded: ", response);
                                 // actions when UVL model is uploaded
-                                let listItem = document.createElement('li');
-                                let h4Element = document.createElement('h4');
-                                h4Element.textContent = response.filename;
-                                listItem.appendChild(h4Element);
+                                for (let i = 0; i < response.filenames.length; i++) {
+                                    let listItem = document.createElement('li');
+                                    let h4Element = document.createElement('h4');
+                                    h4Element.textContent = response.filenames[i];
+                                    listItem.appendChild(h4Element);
 
-                                // generate incremental id for form
-                                let formUniqueId = generateIncrementalId();
+                                    // generate incremental id for form
+                                    let formUniqueId = generateIncrementalId();
 
-                                /*
+                                    /*
                                     ##########################################
                                     FORM BUTTON
                                     ##########################################
@@ -354,7 +357,7 @@
 
                                 formContainer.innerHTML = `
                                     <div class="row">
-                                        <input type="hidden" value="${response.filename}" name="feature_models-${formUniqueId}-uvl_filename">
+                                        <input type="hidden" value="${response.filenames[i]}" name="feature_models-${formUniqueId}-uvl_filename">
                                         <div class="col-12">
                                             <div class="row">
                                                 <div class="col-12">
@@ -428,7 +431,7 @@
 
                                 listItem.appendChild(formContainer);
                                 fileList.appendChild(listItem);
-
+                                }
                             });
 
                             this.on('error', function (file, response) {
@@ -445,14 +448,13 @@
 
                 </script>
 
+                <hr>
+
+                <p>Alternatively, you can upload models from a GitHub repository if they are not in your computer.</p>
+
                 <button type="button" class="btn btn-primary" id="upload_from_github">
                     <p data-feather="github"></p>
                     Upload from GitHub
-                </button>
-
-                <button type="button" class="btn btn-primary" id="upload_from_zip">
-                    <p data-feather="archive"></p>
-                    Upload from ZIP
                 </button>
 
             </div>

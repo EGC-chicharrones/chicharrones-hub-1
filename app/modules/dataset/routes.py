@@ -206,7 +206,7 @@ def upload():
             jsonify(
                 {
                     "message": "UVL uploaded and validated successfully",
-                    "filename": new_filename,
+                    "filenames": [new_filename],
                 }
             ),
             200,
