@@ -51,5 +51,6 @@ def my_profile():
         user=current_user,
         datasets=user_datasets_pagination.items,
         pagination=user_datasets_pagination,
-        total_datasets=total_datasets_count
+        total_datasets=total_datasets_count,
+        is_developer=current_user.profile.user.is_developer
     )
