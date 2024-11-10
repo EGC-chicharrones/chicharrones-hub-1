@@ -232,7 +232,7 @@
                         url: "/dataset/file/upload",
                         paramName: 'file',
                         maxFilesize: 10,
-                        acceptedFiles: '.uvl',
+                        acceptedFiles: '.uvl,.zip',
                         init: function () {
 
                             let fileList = document.getElementById('file-list');
@@ -242,7 +242,7 @@
                             this.on('addedfile', function (file) {
 
                                 let ext = file.name.split('.').pop();
-                                if (ext !== 'uvl') {
+                                if (ext !== 'uvl' && ext !== 'zip') {
                                     this.removeFile(file);
 
                                     let alert = document.createElement('p');

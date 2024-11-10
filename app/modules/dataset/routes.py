@@ -124,42 +124,93 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or not file.filename.endswith(".uvl"):
-        return jsonify({"message": "No valid file"}), 400
+    if file.filename.endswith(".zip"):
+        try:
+            # create temp folder
+            if not os.path.exists(temp_folder):
+                os.makedirs(temp_folder)
+            
+            file_path = os.path.join(temp_folder, file.filename)
+            file.save(file_path)
+            
+            with ZipFile(file_path, "r") as zipf:
+                # Ignore directory structure
+                for member in zipf.namelist():
+                    filename = os.path.basename(member)
+                    if filename:
+                        source = zipf.open(member)
+                        # If an extracted file with the same name is already in the temp dir, give it a different name
+                        if os.path.exists(os.path.join(temp_folder, filename)):
+                        # Generate unique filename (by recursion)
+                            base_name, extension = os.path.splitext(member)
+                            i = 1
+                            while os.path.exists(
+                                os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+                            ):
+                                i += 1
+                            new_filename = f"{base_name} ({i}){extension}".split("/")[-1]
+                            target = open(os.path.join(temp_folder, new_filename), "wb")
+                        else:
+                            target = open(os.path.join(temp_folder, filename), "wb")
 
-    # create temp folder
-    if not os.path.exists(temp_folder):
-        os.makedirs(temp_folder)
+                        with source, target:
+                            shutil.copyfileobj(source, target)
+            
+            # Delete all files that are not .uvl
+            for file in os.listdir(temp_folder):
+                if file[-4:] != ".uvl":
+                    os.remove(os.path.join(temp_folder, file))
 
-    file_path = os.path.join(temp_folder, file.filename)
-
-    if os.path.exists(file_path):
-        # Generate unique filename (by recursion)
-        base_name, extension = os.path.splitext(file.filename)
-        i = 1
-        while os.path.exists(
-            os.path.join(temp_folder, f"{base_name} ({i}){extension}")
-        ):
-            i += 1
-        new_filename = f"{base_name} ({i}){extension}"
-        file_path = os.path.join(temp_folder, new_filename)
+            return (
+                jsonify(
+                    {
+                        "message": "UVL uploaded and validated successfully",
+                        "filenames": os.listdir(temp_folder),
+                    }
+                ),
+                200,
+            )
+            
+        except Exception as e:
+            return jsonify({"message": str(e)}), 500
+    
     else:
-        new_filename = file.filename
+        if not file or not file.filename.endswith(".uvl"):
+            return jsonify({"message": "No valid file"}), 400
 
-    try:
-        file.save(file_path)
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        # create temp folder
+        if not os.path.exists(temp_folder):
+            os.makedirs(temp_folder)
 
-    return (
-        jsonify(
-            {
-                "message": "UVL uploaded and validated successfully",
-                "filename": new_filename,
-            }
-        ),
-        200,
-    )
+        file_path = os.path.join(temp_folder, file.filename)
+
+        if os.path.exists(file_path):
+            # Generate unique filename (by recursion)
+            base_name, extension = os.path.splitext(file.filename)
+            i = 1
+            while os.path.exists(
+                os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+            ):
+                i += 1
+            new_filename = f"{base_name} ({i}){extension}"
+            file_path = os.path.join(temp_folder, new_filename)
+        else:
+            new_filename = file.filename
+
+        try:
+            file.save(file_path)
+        except Exception as e:
+            return jsonify({"message": str(e)}), 500
+
+        return (
+            jsonify(
+                {
+                    "message": "UVL uploaded and validated successfully",
+                    "filename": new_filename,
+                }
+            ),
+            200,
+        )
 
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
