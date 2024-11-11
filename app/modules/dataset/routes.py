@@ -4,6 +4,7 @@ import json
 import shutil
 import tempfile
 import uuid
+import requests
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
@@ -203,6 +204,91 @@ def upload():
             return jsonify({"message": str(e)}), 500
 
         return (
+            jsonify(
+                {
+                    "message": "UVL uploaded and validated successfully",
+                    "filenames": [new_filename],
+                }
+            ),
+            200,
+        )
+
+
+@dataset_bp.route("/dataset/file/upload_from_github", methods=["POST"])
+@login_required
+def upload_from_github():
+    data = request.get_json()
+    url = data.get("url")
+    url_split = url.split("/")
+
+    # Do not accept URLs that are not from GitHub or that contain a file that is not .uvl
+    if url_split[2] != "github.com":
+        return (
+                jsonify(
+                    {
+                        "message": "The URL is not from GitHub",
+                        "url": url,
+                    }
+                ),
+                400,
+            )
+    if url_split[-1][-4:] != ".uvl":
+        return (
+                jsonify(
+                    {
+                        "message": "The imported file is not UVL",
+                        "url": url,
+                    }
+                ),
+                400,
+            )
+    
+    try:
+        headers = {"Accept": "application/vnd.github.raw+json",
+            "X-GitHub-Api-Version": "2022-11-28"}
+        owner = url_split[3]
+        repo = url_split[4]
+        path = "/".join(url_split[7:])
+        response = requests.get(f"https://api.github.com/repos/{owner}/{repo}/contents/{path}", headers=headers)
+    except Exception as e:
+        return (
+                jsonify(
+                    {
+                        "message": "There was an error performing the request",
+                        "url": url,
+                    }
+                ),
+                400,
+            )
+
+    contents = response.text
+    filename = url_split[-1]
+    temp_folder = current_user.temp_folder()
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
+
+    file_path = os.path.join(temp_folder, filename)
+
+    if os.path.exists(file_path):
+        # Generate unique filename (by recursion)
+        base_name, extension = os.path.splitext(filename)
+        i = 1
+        while os.path.exists(
+            os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+        ):
+            i += 1
+        new_filename = f"{base_name} ({i}){extension}"
+        file_path = os.path.join(temp_folder, new_filename)
+    else:
+        new_filename = filename
+
+    try:
+        with open(file_path, "w") as uvl:
+            uvl.write(contents)
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+    return (
             jsonify(
                 {
                     "message": "UVL uploaded and validated successfully",

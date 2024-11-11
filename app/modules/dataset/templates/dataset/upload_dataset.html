@@ -477,6 +477,16 @@
                     </div>
                 </div>
 
+                <script>
+                    confirmGithubUpload.addEventListener('click', function () {
+                                    // Ajax request
+                                    let xhr = new XMLHttpRequest();
+                                    xhr.open('POST', '/dataset/file/upload_from_github', true);
+                                    xhr.setRequestHeader('Content-Type', 'application/json');
+                                    xhr.send(JSON.stringify({url: "https://github.com/Universal-Variability-Language/uvl-models/blob/main/Decision_Models/Online_Shop/dm_eShop_DM.csv.uvl"}));
+                                }.bind(this));
+                </script>
+                
             </div>
 
         </div>
