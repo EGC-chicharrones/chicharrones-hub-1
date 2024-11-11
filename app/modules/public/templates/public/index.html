@@ -41,17 +41,21 @@
                         <div class="row mb-2 mt-4">
 
                             <div class="col-12">
-                                {% for author in dataset.ds_meta_data.authors %}
-                                    <p class="p-0 m-0">
-                                        {{ author.name }}
-                                        {% if author.affiliation %}
-                                            ({{ author.affiliation }})
-                                        {% endif %}
-                                        {% if author.orcid %}
-                                            ({{ author.orcid }})
-                                        {% endif %}
-                                    </p>
-                                {% endfor %}
+                                {% if not dataset.ds_meta_data.anonymized %}
+                                    {% for author in dataset.ds_meta_data.authors %}
+                                        <p class="p-0 m-0">
+                                            {{ author.name }}
+                                            {% if author.affiliation %}
+                                                ({{ author.affiliation }})
+                                            {% endif %}
+                                            {% if author.orcid %}
+                                                ({{ author.orcid }})
+                                            {% endif %}
+                                        </p>
+                                    {% endfor %}
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
                             </div>
 
 

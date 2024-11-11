@@ -18,6 +18,7 @@
                             <th>Description</th>
                             <th>Publication type</th>
                             <th>Dataset DOI</th>
+                            <th>Anonymized</th>
                             <th>Options</th>
                         </tr>
                         </thead>
@@ -33,12 +34,16 @@
                                 <td>{{ dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
                                 <td><a href="{{ dataset.get_uvlhub_doi() }}"
                                        target="_blank">{{ dataset.get_uvlhub_doi() }}</a></td>
+                                <td>{{ dataset.ds_meta_data.anonymized }}</td>
                                 <td>
                                     <a href="{{ dataset.get_uvlhub_doi() }}">
                                         <i data-feather="eye"></i>
                                     </a>
                                     <a href="{{ url_for('dataset.download_dataset', dataset_id=dataset.id) }}">
                                         <i data-feather="download"></i>
+                                    </a>
+                                    <a href="{{ url_for('dataset.change_anonymize_sync', dataset_id=dataset.id) }}">
+                                        <i data-feather="user-check"></i>
                                     </a>
                                 </td>
                             </tr>
@@ -84,6 +89,7 @@
                                     <th>Title</th>
                                     <th>Description</th>
                                     <th>Publication type</th>
+                                    <th>Anonymized</th>
                                     <th>Options</th>
                                 </tr>
                                 </thead>
@@ -97,12 +103,16 @@
                                         </td>
                                         <td>{{ local_dataset.ds_meta_data.description }}</td>
                                         <td>{{ local_dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
+                                        <td>{{ local_dataset.ds_meta_data.anonymized }}</td>
                                         <td>
                                             <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=local_dataset.id) }}">
                                                 <i data-feather="eye"></i>
                                             </a>
                                             <a href="{{ url_for('dataset.download_dataset', dataset_id=local_dataset.id) }}">
                                                 <i data-feather="download"></i>
+                                            </a>
+                                            <a href="{{ url_for('dataset.change_anonymize_unsync', dataset_id=local_dataset.id) }}">
+                                                <i data-feather="user-check"></i>
                                             </a>
                                         </td>
                                     </tr>
