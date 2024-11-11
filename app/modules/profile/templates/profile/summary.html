@@ -30,6 +30,30 @@
 
 </div>
 
+<h1 class="h3 mb-3">Developer profile</h1>
+
+    {% if is_developer %}
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6"> 
+
+            <div class="card shadow-sm" > 
+                <div class="card-header card-dark"> 
+                    <h5 class="card-title mb-0" style="color: white; font-size: 15px;">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text h5"><i class="fa fa-user"></i> <strong>Github Username:</strong> {{user_profile.user.github_username}}</p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        You are not a developer
+    </div>
+    {% endif %}
+
 <h1 class="h3 mb-3">User datasets</h1>
 
     {% if datasets %}
