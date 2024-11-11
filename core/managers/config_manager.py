@@ -30,6 +30,13 @@ class Config:
         f"{os.getenv('MARIADB_DATABASE', 'default_db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Configuración de correo electrónico
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = os.getenv('MAIL_PORT', 587)
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME', 'chicharroneshub@gmail.com')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', 'vofd qmkw ipld vrwo')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
     TIMEZONE = 'Europe/Madrid'
     TEMPLATES_AUTO_RELOAD = True
     UPLOAD_FOLDER = 'uploads'
