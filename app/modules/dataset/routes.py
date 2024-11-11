@@ -4,6 +4,7 @@ import json
 import shutil
 import tempfile
 import uuid
+import requests
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
@@ -211,6 +212,57 @@ def upload():
             ),
             200,
         )
+
+
+@dataset_bp.route("/dataset/file/upload_from_github", methods=["POST"])
+@login_required
+def upload_from_github():
+    data = request.get_json()
+    url = data.get("url")
+    url_split = url.split("/")
+
+    # Do not accept URLs that are not from GitHub or that contain a file that is not .uvl
+    if url_split[2] != "github.com":
+        return (
+                jsonify(
+                    {
+                        "message": "The URL is not from GitHub",
+                        "url": url,
+                    }
+                ),
+                400,
+            )
+    if url_split[-1][-4:] != ".uvl":
+        return (
+                jsonify(
+                    {
+                        "message": "The imported file is not UVL",
+                        "url": url,
+                    }
+                ),
+                400,
+            )
+    
+    try:
+        headers = {"Accept": "application/vnd.github.raw+json",
+            "X-GitHub-Api-Version": "2022-11-28"}
+        owner = url_split[3]
+        repo = url_split[4]
+        path = "/".join(url_split[7:])
+        response = requests.get(f"https://api.github.com/repos/{owner}/{repo}/contents/{path}", headers=headers)
+        print(response.text)
+        return None
+    
+    except Exception as e:
+        return (
+                jsonify(
+                    {
+                        "message": "There was an error performing the request",
+                        "url": url,
+                    }
+                ),
+                400,
+            )
 
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])

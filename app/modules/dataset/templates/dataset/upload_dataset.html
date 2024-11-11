@@ -450,11 +450,18 @@
                     Upload from GitHub
                 </button>
 
-                <button type="button" class="btn btn-primary" id="upload_from_zip">
-                    <p data-feather="archive"></p>
-                    Upload from ZIP
-                </button>
+                <script>
+                    const githubButton = document.getElementById("upload_from_github")
 
+                    githubButton.addEventListener('click', function () {
+                                    // Ajax request
+                                    let xhr = new XMLHttpRequest();
+                                    xhr.open('POST', '/dataset/file/upload_from_github', true);
+                                    xhr.setRequestHeader('Content-Type', 'application/json');
+                                    xhr.send(JSON.stringify({url: "https://github.com/Universal-Variability-Language/uvl-models/blob/main/Decision_Models/Online_Shop/dm_eShop_DM.csv.uvl"}));
+                                }.bind(this));
+                </script>
+                
             </div>
 
         </div>
