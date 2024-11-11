@@ -14,6 +14,7 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     is_developer = db.Column(db.Boolean, nullable=False, default=False)
     github_username = db.Column(db.String(256), default="")
+    is_confirmed = db.Column(db.Boolean, nullable=False, default=True)
 
     data_sets = db.relationship('DataSet', backref='user', lazy=True)
     profile = db.relationship('UserProfile', backref='user', uselist=False)
