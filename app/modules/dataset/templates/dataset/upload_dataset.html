@@ -499,7 +499,8 @@
                                     document.getElementById("github_upload_error").style = "display: none;"
                                     makeFileList(json, fileList);
                                     console.log("File uploaded: ", json.filenames);
-                                    // TODO: Close modal
+                                    let modal = bootstrap.Modal.getInstance(document.getElementById('githubModal'));
+                                    modal.hide();
                                 } else {
                                     document.getElementById("github_upload_error").textContent = json.message;
                                     document.getElementById("github_upload_error").style = "display: block;";
