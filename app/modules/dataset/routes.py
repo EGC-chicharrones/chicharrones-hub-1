@@ -246,16 +246,47 @@ def view_rating_form(dataset_id):
 #     # Aquí se pasa el dataset como contexto al renderizar el formulario
 #     return render_template('dataset/view_ratings.html', form=form, dataset=dataset)
 
-'''
-@dataset_bp.route("/ratings/list", methods=["GET"])
-@login_required
-def list_dataset():
-    return render_template(
-        "ratings/list_ratings.html",
-        ratings=dataset_rating_service.get_ratings(dataset.id),
-    )
-    '''
 
+
+@dataset_bp.route("/dataset/rate/<int:dataset_id>/", methods=["GET"])
+@login_required
+def list_rating(dataset_id):
+    dataset = dataset_service.get_dataset(dataset_id)
+    dataset_ratings = dataset_rating_service.get_ratings(dataset_id)
+    return render_template(
+        "dataset/view_ratings.html",
+        dataset=dataset,
+        dataset_ratings=dataset_ratings,
+    )
+
+@dataset_bp.route("/dataset/create/rate/<int:dataset_id>/", methods=['POST'])
+@login_required
+def create_dataset_rating(dataset_id):
+
+    form = RatingForm()
+    dataset = dataset_service.get_or_404(dataset_id)
+    if not dataset:
+        abort(404)
+
+    if request.method == "POST":
+        if form.validate_on_submit():
+            try:
+                # Guardar la nueva valoración usando el servicio
+                dataset_rating= dataset_rating_service.create_rating(
+                    user_id=current_user.id,
+                    dataset_id=dataset_id,
+                    rating=form.rating.data,
+                    comment=form.comment.data,
+                )
+                logger.info(f"Created rating: {dataset_rating}")
+                return redirect(url_for("dataset.list_dataset"))
+            except Exception as exc:
+                logger.exception(f"Exception while create dataset rating data in local {exc}")
+            return jsonify({"Exception while create dataset rating data in local: ": str(exc)}), 400
+    
+    return render_template("dataset/view_ratings.html", form=form, dataset=dataset)
+
+'''
 @dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['GET', 'POST'])
 @login_required
 def create_rating(dataset_id):
@@ -282,3 +313,4 @@ def create_rating(dataset_id):
 
     # Aquí se pasa el dataset como contexto al renderizar el formulario
     return render_template('dataset/view_ratings.html', form=form, dataset=dataset)
+    '''

@@ -137,3 +137,10 @@ class DatasetRatingRepository(BaseRepository):
             .filter(DataSet.id == dataset_id)
             .all()
         )
+    def create_rating(self, user_id: int, dataset_id: int, rating: int, comment: Optional[str] = None) -> DatasetRating:
+        return self.create(
+            user_id=user_id,
+            dataset_id=dataset_id,
+            rating=rating,
+            comment=comment
+        )
