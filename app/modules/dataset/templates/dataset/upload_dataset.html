@@ -452,10 +452,30 @@
 
                 <p>Alternatively, you can upload models from a GitHub repository if they are not in your computer.</p>
 
-                <button type="button" class="btn btn-primary" id="upload_from_github">
+                <button type="button" class="btn btn-primary" id="upload_from_github" data-bs-toggle="modal" data-bs-target="#githubModal">
                     <p data-feather="github"></p>
                     Upload from GitHub
                 </button>
+
+                <div class="modal fade" id="githubModal" tabindex="-1" aria-labelledby="githubModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="githubModalLabel">Upload from GitHub</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <label for="repoUrl" class="form-label">Introduce the public GitHub repository url</label>
+                                <input type="text" class="form-control" id="repoUrl" placeholder="https://github.com/user/repository">
+                                <div class="alert alert-danger mt-2" id="modalAlert" style="display: none;"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="confirmGithubUpload">Upload</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
