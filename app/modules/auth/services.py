@@ -20,10 +20,16 @@ class AuthenticationService(BaseService):
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
+        # Correct credentials
         if user is not None and user.check_password(password):
-            login_user(user, remember=remember)
-            return True
-        return False
+            # Email verified
+            if user.is_confirmed:
+                login_user(user, remember=remember)
+                return "success"
+            # Email not verified
+            else:
+                return "email_not_confirmed"
+        return "invalid_credentials"
 
     def is_email_available(self, email: str) -> bool:
         return self.repository.get_by_email(email) is None

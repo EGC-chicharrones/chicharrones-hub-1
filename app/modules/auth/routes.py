@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, current_app
+from flask import render_template, redirect, url_for, request, current_app, flash
 from flask_login import current_user, logout_user
 
 from app.modules.auth import auth_bp
@@ -42,6 +42,9 @@ def show_signup_form():
         # Send the email
         current_app.extensions['mail'].send(msg)
 
+        # Flash the message
+        flash('Please, check your email to verify your account!', 'info')
+
         # Redirect to login
         return redirect(url_for('auth.login'))
 
@@ -55,10 +58,19 @@ def login():
 
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
-        if authentication_service.login(form.email.data, form.password.data):
+        login_status = authentication_service.login(form.email.data, form.password.data)
+
+        # If login is successful
+        if login_status == "success":
             return redirect(url_for('public.index'))
 
-        return render_template("auth/login_form.html", form=form, error='Invalid credentials')
+        # If the email is not verified
+        elif login_status == "email_not_confirmed":
+            return render_template("auth/login_form.html", form=form, error='Verify your email')
+
+        # If the credentials are not correct
+        elif login_status == "invalid_credentials":
+            return render_template("auth/login_form.html", form=form, error='Invalid credentials')
 
     return render_template('auth/login_form.html', form=form)
 
@@ -76,7 +88,12 @@ def confirm_email(token):
     print(user_id)
     if not user_id:
         logout_user()
+        # Flash the message
+        flash('Failed verification, check your email!!', 'danger')
         return redirect(url_for('public.index'))
 
     authentication_service.update_email_confirmed(user_id)
-    return redirect(url_for('public.index'))
+
+    # Flash the message
+    flash('Your account has been verified!', 'success')
+    return redirect(url_for('auth.login'))
