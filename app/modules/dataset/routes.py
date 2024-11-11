@@ -220,46 +220,24 @@ def upload_from_github():
     data = request.get_json()
     url = data.get("url")
     url_split = url.split("/")
-
-    # Do not accept URLs that are not from GitHub or that contain a file that is not .uvl
-    if url_split[2] != "github.com":
-        return (
-                jsonify(
-                    {
-                        "message": "The URL is not from GitHub",
-                        "url": url,
-                    }
-                ),
-                400,
-            )
-    if url_split[-1][-4:] != ".uvl":
-        return (
-                jsonify(
-                    {
-                        "message": "The imported file is not UVL",
-                        "url": url,
-                    }
-                ),
-                400,
-            )
     
     try:
+        # Do not accept URLs that are not from GitHub or that contain a file that is not .uvl
+        if url_split[2] != "github.com":
+            return jsonify({"message": "The file is not from GitHub"}), 400
+        if url_split[-1][-4:] != ".uvl":
+            return jsonify({"message": "The imported file is not UVL"}), 400
+
         headers = {"Accept": "application/vnd.github.raw+json",
             "X-GitHub-Api-Version": "2022-11-28"}
         owner = url_split[3]
         repo = url_split[4]
         path = "/".join(url_split[7:])
         response = requests.get(f"https://api.github.com/repos/{owner}/{repo}/contents/{path}", headers=headers)
+        if response.status_code != 200:
+            return jsonify({"message": f"GitHub returned an error"}), response.status_code
     except Exception as e:
-        return (
-                jsonify(
-                    {
-                        "message": "There was an error performing the request",
-                        "url": url,
-                    }
-                ),
-                400,
-            )
+        return jsonify({"message": "Malformed URL. Please check that it follows the specified format."}), 400
 
     contents = response.text
     filename = url_split[-1]
