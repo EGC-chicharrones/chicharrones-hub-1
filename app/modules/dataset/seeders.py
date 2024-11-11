@@ -1,5 +1,6 @@
 import os
-import shutil
+import random
+from datetime import datetime, timezone
 from app.modules.auth.models import User
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
 from app.modules.hubfile.models import Hubfile
@@ -9,29 +10,34 @@ from app.modules.dataset.models import (
     DSMetaData,
     PublicationType,
     DSMetrics,
-    Author)
-from datetime import datetime, timezone
-from dotenv import load_dotenv
-
-import random
+    DatasetRating,
+    Author
+)
+from app import db  # Asegúrate de importar db para commit y flush
 
 class DataSetSeeder(BaseSeeder):
-
-    priority = 2  # Lower priority
+    priority = 2  # Prioridad más baja
 
     def run(self):
-        # Retrieve users
+        # Buscar usuarios, y si no existen, crearlos temporalmente para el seeder
         user1 = User.query.filter_by(email='user1@example.com').first()
         user2 = User.query.filter_by(email='user2@example.com').first()
 
-        if not user1 or not user2:
-            raise Exception("Users not found. Please seed users first.")
+        if not user1:
+            user1 = User(email='user1@example.com', password="hashed_password1")
+            db.session.add(user1)
+            db.session.flush()  # Inserta sin confirmar la transacción
 
-        # Create DSMetrics instance
+        if not user2:
+            user2 = User(email='user2@example.com', password="hashed_password2")
+            db.session.add(user2)
+            db.session.flush()  # Inserta sin confirmar la transacción
+
+        # Crear DSMetrics
         ds_metrics = DSMetrics(number_of_models='5', number_of_features='50')
         seeded_ds_metrics = self.seed([ds_metrics])[0]
 
-        # Create DSMetaData instances
+        # Crear DSMetaData
         ds_meta_data_list = [
             DSMetaData(
                 deposition_id=1 + i,
@@ -46,7 +52,7 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
 
-        # Create Author instances and associate with DSMetaData
+        # Crear instancias de Author y asociarlas con DSMetaData
         authors = [
             Author(
                 name=f'Author {i+1}',
@@ -57,7 +63,7 @@ class DataSetSeeder(BaseSeeder):
         ]
         self.seed(authors)
 
-        # Create DataSet instances
+        # Crear instancias de DataSet
         datasets = [
             DataSet(
                 user_id=user1.id if i % 2 == 0 else user2.id,
@@ -67,24 +73,22 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_datasets = self.seed(datasets)
 
-        # Create DatasetRating instances for each DataSet
+        # Crear DatasetRating para cada DataSet
         ratings = []
         for dataset in seeded_datasets:
-            # Genera entre 1 y 3 valoraciones por dataset
             num_ratings = random.randint(1, 3)
             for _ in range(num_ratings):
                 rating = DatasetRating(
-                    value=random.randint(1, 5),  # Valoración aleatoria entre 1 y 5
+                    value=random.randint(1, 5),
                     comment=f"Comentario para el dataset {dataset.id}",
-                    user_id=random.choice([user1.id, user2.id]),  # Usuario aleatorio entre los dos
+                    user_id=random.choice([user1.id, user2.id]),
                     dataset_id=dataset.id,
                     created_at=datetime.now(timezone.utc)
                 )
                 ratings.append(rating)
 
-        # Seed ratings to the database
+        # Insertar las valoraciones en la base de datos
         self.seed(ratings)
-
-        # (Continuación de creación de FeatureModels y Hubfiles aquí...)
+        db.session.commit()  # Confirmar todos los cambios al final
 
         print("Dataset ratings successfully seeded.")

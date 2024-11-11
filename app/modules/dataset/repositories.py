@@ -11,7 +11,8 @@ from app.modules.dataset.models import (
     DSDownloadRecord,
     DSMetaData,
     DSViewRecord,
-    DataSet
+    DataSet,
+    DatasetRating
 )
 from core.repositories.BaseRepository import BaseRepository
 
@@ -129,3 +130,10 @@ class DatasetRatingRepository(BaseRepository):
     def calculate_avg_rating(self, dataset_id: int) -> float:
         avg_rating = self.model.query.with_entities(func.avg(self.model.rating)).filter_by(dataset_id=dataset_id).scalar()
         return avg_rating if avg_rating is not None else 0.0
+
+    def get_ratings(self, dataset_id: int) -> DatasetRating:
+        return (
+            self.model.query.join(DataSet)
+            .filter(DataSet.id == dataset_id)
+            .all()
+        )

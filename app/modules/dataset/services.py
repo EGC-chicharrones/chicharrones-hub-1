@@ -10,14 +10,15 @@ from flask import request
 from app import db
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData
+from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, DatasetRating
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DOIMappingRepository,
     DSDownloadRecordRepository,
     DSMetaDataRepository,
     DSViewRecordRepository,
-    DataSetRepository
+    DataSetRepository,
+    DatasetRatingRepository
 )
 from app.modules.featuremodel.repositories import FMMetaDataRepository, FeatureModelRepository
 from app.modules.hubfile.repositories import (
@@ -142,7 +143,7 @@ class DataSetService(BaseService):
         domain = os.getenv('DOMAIN', 'localhost')
         return f'http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}'
 
-    def create_rating(dataset_id, user_id, value, comment=None):
+    def create_rating(dataset_id, user_id, value, comment=None) -> DatasetRating:
         try:
         # Crea una nueva instancia de DatasetRating
             rating = DatasetRating(
@@ -222,6 +223,26 @@ class DOIMappingService(BaseService):
             return doi_mapping.dataset_doi_new
         else:
             return None
+
+class DatasetRatingService(BaseService):
+    def __init__(self):
+        super().__init__(DatasetRatingRepository())
+    
+    def create_rating(self, user_id: int, dataset_id: int, rating: float, comment: Optional[str] = None) -> DatasetRating:
+        if not (0.0 <= rating <= 5.0):
+            raise ValueError("Rating must be between 0.0 and 5.0.")
+        
+        return self.repository.create_rating(user_id, dataset_id, rating,comment)
+
+    def calculate_avg_rating(self, dataset_id: int) -> float:
+        avg_rating= self.repository.calculate_avg_rating(dataset_id)
+        if avg_rating:
+            return avg_rating
+        else:
+            return None
+
+    def get_ratings(self, dataset_id: int) -> DatasetRating:
+        return self.repository.get_ratings(dataset_id)
 
 
 class SizeService():

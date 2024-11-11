@@ -28,7 +28,8 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
     DataSetService,
-    DOIMappingService
+    DOIMappingService,
+    DatasetRatingService,
 )
 from app.modules.zenodo.services import ZenodoService
 
@@ -40,6 +41,7 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
+dataset_rating_service= DatasetRatingService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -203,8 +205,16 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
     return render_template("dataset/view_dataset.html", dataset=dataset)
 
+@dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['GET'])
+@login_required
+def view_rating_form(dataset_id):
+    form = RatingForm()
+    dataset = dataset_service.get_or_404(dataset_id)  # Obtener el dataset o 404
 
-@dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['GET', 'POST'])
+    # Renderiza la página del formulario de rating
+    return render_template('dataset/view_ratings.html', form=form, dataset=dataset)
+
+@dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['POST'])
 @login_required
 def create_rating(dataset_id):
     form = RatingForm()
@@ -232,3 +242,13 @@ def create_rating(dataset_id):
 
     # Aquí se pasa el dataset como contexto al renderizar el formulario
     return render_template('dataset/view_ratings.html', form=form, dataset=dataset)
+
+'''
+@dataset_bp.route("/ratings/list", methods=["GET"])
+@login_required
+def list_dataset():
+    return render_template(
+        "ratings/list_ratings.html",
+        ratings=dataset_rating_service.get_ratings(dataset.id),
+    )
+    '''
