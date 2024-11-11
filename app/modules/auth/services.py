@@ -1,6 +1,7 @@
 import os
 from flask_login import login_user
 from flask_login import current_user
+from flask import current_app
 
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
@@ -8,12 +9,14 @@ from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+from itsdangerous import URLSafeTimedSerializer
 
 
 class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
+        self.user_repository = UserRepository()
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
@@ -33,6 +36,7 @@ class AuthenticationService(BaseService):
             surname = kwargs.pop("surname", None)
             is_developer = kwargs.pop("is_developer", None)
             github_username = kwargs.pop("github_username", None)
+            is_confirmed = kwargs.pop("is_confirmed", None)
 
             if not email:
                 raise ValueError("Email is required.")
@@ -51,7 +55,8 @@ class AuthenticationService(BaseService):
                 "email": email,
                 "password": password,
                 "is_developer": is_developer,
-                "github_username": github_username
+                "github_username": github_username,
+                "is_confirmed": is_confirmed
             }
             profile_data = {
                 "name": name,
@@ -86,3 +91,19 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+    def generate_confirmation_token(self, user_id):
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps(user_id, salt='email-confirm-salt')
+
+    def confirm_token(self, token, expiration=3600):
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = serializer.loads(token, salt='email-confirm-salt', max_age=expiration)
+        except Exception:
+            return None
+        return user_id
+
+    def update_email_confirmed(self, user_id):
+        updated_instance = self.user_repository.update(user_id, is_confirmed=True)
+        return updated_instance
