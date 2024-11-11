@@ -16,5 +16,5 @@ class UserProfileForm(FlaskForm):
         Length(min=5, max=100)
     ])
     is_developer = BooleanField('Are you a developer?')
-    github_username = StringField('GitHub Username')
+    github_username = StringField('GitHub Username', validators=[Length(max=100)])
     submit = SubmitField('Save profile')

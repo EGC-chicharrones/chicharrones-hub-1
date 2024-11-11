@@ -9,7 +9,7 @@ class SignupForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     is_developer = BooleanField('Are you a developer?')
-    github_username = StringField('GitHub Username')
+    github_username = StringField('GitHub Username', validators=[Length(max=100)])
     submit = SubmitField('Submit')
 
 

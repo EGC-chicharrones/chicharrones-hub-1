@@ -44,7 +44,6 @@
                         {{ form.surname(class="form-control", placeholder="Enter your surname", required=true, value=surname_value) }}
                         {% for error in form.surname.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
@@ -55,7 +54,6 @@
                         required=true, value=name_value) }}
                         {% for error in form.name.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
@@ -69,7 +67,6 @@
                         {{ form.affiliation(class="form-control", placeholder="Enter your affiliation", required=true, value=affiliation_value) }}
                         {% for error in form.affiliation.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
@@ -84,7 +81,6 @@
                         required=true, value=orcid_value) }}
                         {% for error in form.orcid.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
@@ -101,7 +97,6 @@
                         
                         {% for error in form.is_developer.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
                 </div>
@@ -116,7 +111,6 @@
                         required=true, value=github_username_value) }}
                         {% for error in form.github_username.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
