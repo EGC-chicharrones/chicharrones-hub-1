@@ -7,6 +7,8 @@ import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
+from app.modules.dataset.rating_service import RatingService
+
 from flask import (
     redirect,
     render_template,
@@ -34,6 +36,7 @@ from app.modules.dataset.services import (
 from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
+rating_service = RatingService()
 
 dataset_service = DataSetService()
 author_service = AuthorService()
@@ -214,13 +217,50 @@ def view_rating_form(dataset_id):
     # Renderiza la página del formulario de rating
     return render_template('dataset/view_ratings.html', form=form, dataset=dataset)
 
-@dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['POST'])
+# @dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['POST'])
+# @login_required
+# def create_rating(dataset_id):
+#     form = RatingForm()
+#     # Obtén el dataset usando el ID
+#     dataset = dataset_service.get_or_404(dataset_id)  # Asegúrate de tener este método en el servicio
+
+#     if form.validate_on_submit():
+#         result = dataset_service.create_rating(
+#             dataset_id=dataset_id,
+#             user_id=current_user.id,
+#             value=form.value.data,
+#             comment=form.comment.data
+#         )
+
+#         # Manejo de respuesta de servicio
+#         return dataset_service.handle_service_response(
+#             result=result,
+#             errors=form.errors,
+#             success_url_redirect=url_for('dataset.list_ratings', dataset_id=dataset_id),
+#             success_msg='¡Rating creado exitosamente!',
+#             error_template='dataset/create_rating.html',
+#             form=form,
+#             dataset=dataset
+#         )
+
+#     # Aquí se pasa el dataset como contexto al renderizar el formulario
+#     return render_template('dataset/view_ratings.html', form=form, dataset=dataset)
+
+'''
+@dataset_bp.route("/ratings/list", methods=["GET"])
+@login_required
+def list_dataset():
+    return render_template(
+        "ratings/list_ratings.html",
+        ratings=dataset_rating_service.get_ratings(dataset.id),
+    )
+    '''
+
+@dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['GET', 'POST'])
 @login_required
 def create_rating(dataset_id):
     form = RatingForm()
-    # Obtén el dataset usando el ID
-    dataset = dataset_service.get_or_404(dataset_id)  # Asegúrate de tener este método en el servicio
-
+    dataset = dataset_service.get_or_404(dataset_id)
     if form.validate_on_submit():
         result = dataset_service.create_rating(
             dataset_id=dataset_id,
@@ -242,13 +282,3 @@ def create_rating(dataset_id):
 
     # Aquí se pasa el dataset como contexto al renderizar el formulario
     return render_template('dataset/view_ratings.html', form=form, dataset=dataset)
-
-'''
-@dataset_bp.route("/ratings/list", methods=["GET"])
-@login_required
-def list_dataset():
-    return render_template(
-        "ratings/list_ratings.html",
-        ratings=dataset_rating_service.get_ratings(dataset.id),
-    )
-    '''
