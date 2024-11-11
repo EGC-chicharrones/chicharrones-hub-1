@@ -37,7 +37,7 @@ class UserProfileService(BaseService):
             if not isinstance(is_developer, bool):
                 raise ValueError("Developer field must be a boolean value.")
             if is_developer and not github_username:
-                raise ValueError("Developer must have a github username.")
+                raise ValueError("Developer must have a GitHub username.")
 
             user_data = {
                 "is_developer": is_developer,
