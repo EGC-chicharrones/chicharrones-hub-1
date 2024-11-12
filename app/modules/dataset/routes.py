@@ -393,3 +393,35 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     return render_template("dataset/view_dataset.html", dataset=dataset)
+
+
+@dataset_bp.route("/dataset/anonymize/<int:dataset_id>/", methods=["GET", "POST"])
+@login_required
+def change_anonymize_sync(dataset_id):
+    # Get dataset
+    dataset = dataset_service.get_synchronized_dataset(current_user.id, dataset_id)
+
+    return change_anonymize(dataset)
+
+
+@dataset_bp.route("/dataset/anonymize/unsync/<int:dataset_id>/", methods=["GET", "POST"])
+@login_required
+def change_anonymize_unsync(dataset_id):
+    # Get dataset
+    dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+
+    return change_anonymize(dataset)
+
+
+def change_anonymize(dataset):
+    # Coger el actual
+    current_anonymize = dataset.ds_meta_data.anonymized
+    changes = {
+        "anonymized": not current_anonymize
+    }
+
+    # Cambiarlo y subirlo
+    dsmetadata_service.update(dataset.id, **changes)
+
+    # Redirigir al listado de datasets
+    return redirect(url_for('dataset.list_dataset'))

@@ -8,8 +8,8 @@ class SignupForm(FlaskForm):
     surname = StringField('Surname', validators=[DataRequired(), Length(max=100)])
     password = PasswordField('Password', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    is_developer = BooleanField('Are you a developer?')  # validators=[DataRequired()]
-    github_username = StringField('Github Username')  # No data required because it depends on the developer field
+    is_developer = BooleanField('Are you a developer?')
+    github_username = StringField('GitHub Username', validators=[Length(max=100)])
     submit = SubmitField('Submit')
 
 

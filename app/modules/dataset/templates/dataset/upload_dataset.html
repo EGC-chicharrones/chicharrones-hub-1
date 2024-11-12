@@ -192,6 +192,18 @@
 
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 col-lg-6 col-xs-12">
+                                <div class="mb-3">
+                                    {{ form.anonymized.label(class="form-label") }}
+                                    {{ form.anonymized(class="form-check-input") }} 
+                                    {% for error in form.anonymized.errors %}
+                                        <span style="color: red;">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
