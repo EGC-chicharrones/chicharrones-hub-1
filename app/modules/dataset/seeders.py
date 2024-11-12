@@ -75,15 +75,14 @@ class DataSetSeeder(BaseSeeder):
 
         # Crear DatasetRating para cada DataSet
         ratings = []
-        for dataset in seeded_datasets:
+        for dataset in ds_meta_data_list:
             num_ratings = random.randint(1, 3)
             for _ in range(num_ratings):
                 rating = DatasetRating(
                     value=random.randint(1, 5),
                     comment=f"Comentario para el dataset {dataset.id}",
                     user_id=random.choice([user1.id, user2.id]),
-                    dataset_id=dataset.id,
-                    created_at=datetime.now(timezone.utc)
+                    ds_meta_data_id=dataset.id,
                 )
                 ratings.append(rating)
 

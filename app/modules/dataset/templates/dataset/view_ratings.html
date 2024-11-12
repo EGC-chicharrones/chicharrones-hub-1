@@ -9,7 +9,7 @@
     <div class="card">
         <div class="card-body">
             <h5 class="card-title">Add a Rating</h5>
-            <form action="{{ url_for('dataset.create_dataset_rating', dataset_id=dataset.id) }}" method="post">
+            <form action="{{ url_for('dataset.create_rating', dataset_id=dataset.id) }}" method="post">
                 <div class="row">
                     <div class="col-md-2">
                         <label for="value" class="form-label">Rating (0-5)</label>
@@ -26,7 +26,7 @@
     </div>
 </div>
 
-{% if dataset_ratings %}
+{% if ratings %}
     <div class="col-12">
         <div class="card">
             <div class="card-body">
@@ -37,16 +37,14 @@
                             <th>User ID</th>
                             <th>Rating</th>
                             <th>Comment</th>
-                            <th>Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for dataset_rating in dataset_ratings %}
+                        {% for rating in ratings %}
                             <tr>
-                                <td>{{ dataset_rating.user_id }}</td>
-                                <td>{{ dataset_rating.value }}</td>
-                                <td>{{ dataset_rating.comment or "No comment" }}</td>
-                                <td>{{ dataset_rating.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ rating.user_id }}</td>
+                                <td>{{ rating.value }}</td>
+                                <td>{{ rating.comment or "No comment" }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

@@ -67,7 +67,8 @@ class DSMetaData(db.Model):
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey('ds_metrics.id'))
     ds_metrics = db.relationship('DSMetrics', uselist=False, backref='ds_meta_data', cascade="all, delete")
     authors = db.relationship('Author', backref='ds_meta_data', lazy=True, cascade="all, delete")
-
+    rating_avg = db.Column(db.Float, default=0.0)
+    
 
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,10 +79,7 @@ class DataSet(db.Model):
 
     ds_meta_data = db.relationship('DSMetaData', backref=db.backref('data_set', uselist=False))
     feature_models = db.relationship('FeatureModel', backref='data_set', lazy=True, cascade="all, delete")
-
-    # ratings = db.relationship('DatasetRating', backref='dataset', lazy=True, cascade="all, delete-orphan")
-
-
+    
     def name(self):
         return self.ds_meta_data.title
 
@@ -193,12 +191,11 @@ class DatasetRating(db.Model):
     value = db.Column(db.Integer, nullable=False)  # Calificación (por ejemplo, escala de 1 a 5)
     comment = db.Column(db.Text, nullable=True)  # Comentario opcional del usuario
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    ds_meta_data_id = db.Column(db.Integer, db.ForeignKey('ds_meta_data.id'), nullable=False)
 
     # Relación con el usuario y el dataset
     user = db.relationship('User', backref='dataset_ratings')
-    dataset = db.relationship('DataSet', backref='dataset_ratings')
+    ds_meta_data = db.relationship('DSMetaData', backref=db.backref('ratings', lazy=True))
 
     def to_dict(self):
         return {
@@ -206,9 +203,8 @@ class DatasetRating(db.Model):
             'value': self.value,
             'comment': self.comment,
             'user_id': self.user_id,
-            'dataset_id': self.dataset_id,
-            'created_at': self.created_at.isoformat()
+            'ds_meta_data_id': self.ds_meta_data_id,
         }
 
     def __repr__(self):
-        return f'DatasetRating<User={self.user_id}, Dataset={self.dataset_id}, Value={self.value}>'
+        return f'DatasetRating<User={self.user_id}, Dataset={self.ds_meta_data_id}, Value={self.value}>'

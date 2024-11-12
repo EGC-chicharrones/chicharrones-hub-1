@@ -8,7 +8,7 @@ import uuid
 from flask import request, flash, redirect, render_template
 
 from app import db
-
+from app.modules.dataset.rating_repository import RatingRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, DatasetRating
 from app.modules.dataset.repositories import (
@@ -17,8 +17,7 @@ from app.modules.dataset.repositories import (
     DSDownloadRecordRepository,
     DSMetaDataRepository,
     DSViewRecordRepository,
-    DataSetRepository,
-    DatasetRatingRepository
+    DataSetRepository
 )
 from app.modules.featuremodel.repositories import FMMetaDataRepository, FeatureModelRepository
 from app.modules.hubfile.repositories import (
@@ -154,7 +153,7 @@ class DataSetService(BaseService):
             )
             db.session.add(rating)
             db.session.commit()
-            return {'status': 'success', 'data': rating}
+            return rating
         except Exception as e:
             db.session.rollback()
             return {'status': 'error', 'message': str(e)}
@@ -226,13 +225,13 @@ class DOIMappingService(BaseService):
 
 class DatasetRatingService(BaseService):
     def __init__(self):
-        super().__init__(DatasetRatingRepository())
+        super().__init__(RatingRepository())
     
-    def create_rating(self, user_id: int, dataset_id: int, rating: float, comment: Optional[str] = None) -> DatasetRating:
-        if not (0.0 <= rating <= 5.0):
+    def create_rating(self, user_id: int, dataset_id: int, value: int, comment: Optional[str] = None) -> DatasetRating:
+        if not (0.0 <= value <= 5.0):
             raise ValueError("Rating must be between 0.0 and 5.0.")
         
-        return self.repository.create_rating(user_id, dataset_id, rating,comment)
+        return self.repository.create_rating(user_id, dataset_id, value,comment)
 
     def calculate_avg_rating(self, dataset_id: int) -> float:
         avg_rating= self.repository.calculate_avg_rating(dataset_id)
@@ -240,9 +239,9 @@ class DatasetRatingService(BaseService):
             return avg_rating
         else:
             return None
-
-    def get_ratings(self, dataset_id: int) -> DatasetRating:
-        return self.repository.get_ratings(dataset_id)
+            
+    def get_ratings(self, dataset_id: int) -> list[DatasetRating]:
+        return self.repository.get_ratings_by_dataset_id(dataset_id)
 
 
 class SizeService():
