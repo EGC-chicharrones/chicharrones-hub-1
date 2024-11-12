@@ -160,3 +160,49 @@ def test_service_create_with_developer_fail_no_github_username(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+# Sign up verification tests
+def test_login_unverified_email(test_client, clean_database):
+    test_signup_user_successful(test_client)
+    response_login = test_client.post(
+        "/login", data=dict(email="foo@example.com", password="foo1234"), follow_redirects=True
+    )
+
+    assert response_login.request.path == url_for("auth.login"), "Login was succesful"
+
+
+def test_login_verified_email_bad_token(test_client, clean_database):
+    test_signup_user_successful(test_client)
+
+    user = UserRepository().get_by_email("foo@example.com")
+    token = AuthenticationService().generate_confirmation_token(user.id)
+
+    response_verified_email = test_client.get(
+        f"/confirm/{token}ewrerww", follow_redirects=True
+    )
+
+    response_login = test_client.post(
+        "/login", data=dict(email="foo@example.com", password="foo1234"), follow_redirects=True
+    )
+
+    assert response_verified_email.request.path == url_for("public.index"), "Verification was successful"
+    assert response_login.request.path == url_for("auth.login"), "Login was succesful"
+
+
+def test_login_verified_email_good_token(test_client, clean_database):
+    test_signup_user_successful(test_client)
+
+    user = UserRepository().get_by_email("foo@example.com")
+    token = AuthenticationService().generate_confirmation_token(user.id)
+
+    response_verified_email = test_client.get(
+        f"/confirm/{token}", follow_redirects=True
+    )
+
+    response_login = test_client.post(
+        "/login", data=dict(email="foo@example.com", password="foo1234"), follow_redirects=True
+    )
+
+    assert response_verified_email.request.path == url_for("auth.login"), "Verification was unsuccessful"
+    assert response_login.request.path == url_for("public.index"), "Login was unsuccesful"
