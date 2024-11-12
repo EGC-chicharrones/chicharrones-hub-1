@@ -36,3 +36,15 @@ def test_edit_profile_page_get(test_client):
     assert b"Edit profile" in response.data, "The expected content is not present on the page"
 
     logout(test_client)
+
+
+def test_get_view_user_profile(test_client):
+
+    response = test_client.get("/profile/1")
+    assert response.status_code == 200, "The profile editing page not was accesed."
+
+
+def test_get_view_user_profile_does_not_exist(test_client):
+
+    response = test_client.get("/profile/123456789")
+    assert response.status_code == 404, "The profile editing page was accesed, which should not happen."
