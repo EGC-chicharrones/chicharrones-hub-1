@@ -70,7 +70,19 @@
 
 
                         </div>
-
+                        <div class="row mb-2">
+                            <span class=" text-secondary">
+                                Uploaded by
+                            </span>
+                                {% if not dataset.ds_meta_data.anonymized %}
+                                <a href="profile/{{dataset.user.id}}">
+                                    {{ dataset.user.profile.surname }}, {{ dataset.user.profile.name }}
+                                </a>
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
+                                               
+                        </div>
                         <div class="row mb-2">
 
                             <div class="col-12">
