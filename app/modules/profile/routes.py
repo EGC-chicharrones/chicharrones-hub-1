@@ -1,5 +1,5 @@
 from app.modules.dataset.models import DataSet
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
 
 from app import db
@@ -53,7 +53,8 @@ def my_profile():
         total_datasets=total_datasets_count,
         is_developer=current_user.profile.user.is_developer
     )
-    
+
+
 @profile_bp.route('/profile/<int:user_id>')
 def user_profile(user_id):
     page = request.args.get('page', 1, type=int)
@@ -61,6 +62,9 @@ def user_profile(user_id):
 
     user = db.session.query(User) \
         .filter(User.id == user_id).first()
+
+    if user is None:
+        abort(404)
 
     user_datasets_pagination = db.session.query(DataSet) \
         .filter(DataSet.user_id == user_id) \
@@ -70,8 +74,6 @@ def user_profile(user_id):
     total_datasets_count = db.session.query(DataSet) \
         .filter(DataSet.user_id == user_id) \
         .count()
-
-    print(user_datasets_pagination.items)
 
     return render_template(
         'profile/view_user_profile.html',
