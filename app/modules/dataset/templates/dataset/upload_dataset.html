@@ -513,6 +513,7 @@
                                     console.log("File uploaded: ", json.filenames);
                                     let modal = bootstrap.Modal.getInstance(document.getElementById('githubModal'));
                                     modal.hide();
+                                    show_upload_dataset();
                                 } else {
                                     document.getElementById("github_upload_error").textContent = json.message;
                                     document.getElementById("github_upload_error").style = "display: block;";
