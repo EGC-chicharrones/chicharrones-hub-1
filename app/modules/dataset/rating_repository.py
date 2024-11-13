@@ -10,4 +10,3 @@ class RatingRepository(BaseRepository):
 
     def get_all_by_user(self, user_id):
         return DatasetRating.query.filter_by(user_id=user_id).all()
-

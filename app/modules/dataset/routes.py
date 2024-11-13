@@ -215,7 +215,7 @@ def view_rating_form(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
     ds_meta_data_id = dataset.ds_meta_data.id
     ratings = rating_service.get_ratings(ds_meta_data_id)
-
+    
     return render_template('dataset/view_ratings.html', form=form, dataset=dataset, ratings=ratings)
 
 
@@ -231,3 +231,4 @@ def create_rating(dataset_id):
     rating_service.create_rating(user_id, ds_meta_data_id, value, comment)
 
     return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
+

@@ -47,7 +47,7 @@
     }
     .star-rating .star.selected,
     .star-rating .star:hover,
-    .star-rating .star:hover ~ .star {
+    .star-rating .star:hover.star {
         color: #FFD700;
     }
 </style>
@@ -94,28 +94,23 @@
         <div class="card">
             <div class="card-body">
                 <h5>Ratings</h5>
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>User ID</th>
-                            <th>Rating</th>
-                            <th>Comment</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for rating in ratings %}
-                            <tr>
-                                <td>{{ rating.user_id }}</td>
-                                <td>
-                                    {% for i in range(rating.value) %}
-                                        <span style="color: gold;">&#9733;</span>
-                                    {% endfor %}
-                                </td>
-                                <td>{{ rating.comment or "No comment" }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="row">
+                    {% for rating in ratings %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title">User ID: {{ rating.user_id }}</h6>
+                                    <div class="star-rating mb-2">
+                                        {% for i in range(rating.value) %}
+                                            <span style="color: gold;">&#9733;</span>
+                                        {% endfor %}
+                                    </div>
+                                    <p class="card-text">{{ rating.comment or "No comment" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
@@ -130,5 +125,6 @@
         </div>
     </div>
 {% endif %}
+
 
 {% endblock %}
