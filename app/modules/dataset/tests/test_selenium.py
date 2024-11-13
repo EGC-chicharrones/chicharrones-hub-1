@@ -1,6 +1,7 @@
 import os
 import time
 
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -131,5 +132,234 @@ def test_upload_dataset():
         close_driver(driver)
 
 
+def test_upload_dataset_from_github():
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Open the login page
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+
+        # Find the username and password field and enter the values
+        email_field = driver.find_element(By.NAME, "email")
+        password_field = driver.find_element(By.NAME, "password")
+
+        email_field.send_keys("user1@example.com")
+        password_field.send_keys("1234")
+
+        # Send the form
+        password_field.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+
+        # Count initial datasets
+        initial_datasets = count_datasets(driver, host)
+
+        # Open the upload dataset
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+
+        # Find basic info and UVL model and fill values
+        title_field = driver.find_element(By.NAME, "title")
+        title_field.send_keys("Title")
+        desc_field = driver.find_element(By.NAME, "desc")
+        desc_field.send_keys("Description")
+        tags_field = driver.find_element(By.NAME, "tags")
+        tags_field.send_keys("tag1,tag2")
+
+        # Add two authors and fill
+        add_author_button = driver.find_element(By.ID, "add_author")
+        add_author_button.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+        add_author_button.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+
+        name_field0 = driver.find_element(By.NAME, "authors-0-name")
+        name_field0.send_keys("Author0")
+        affiliation_field0 = driver.find_element(By.NAME, "authors-0-affiliation")
+        affiliation_field0.send_keys("Club0")
+        orcid_field0 = driver.find_element(By.NAME, "authors-0-orcid")
+        orcid_field0.send_keys("0000-0000-0000-0000")
+
+        name_field1 = driver.find_element(By.NAME, "authors-1-name")
+        name_field1.send_keys("Author1")
+        affiliation_field1 = driver.find_element(By.NAME, "authors-1-affiliation")
+        affiliation_field1.send_keys("Club1")
+
+        # Valid GitHub link to UVL files
+        file1_path = (
+            "https://github.com/Universal-Variability-Language/uvl-models/blob/main/"
+            "Decision_Models/Mobile_Phone/dm_mobile_phone.csv.uvl"
+        )
+        file2_path = (
+            "https://github.com/Universal-Variability-Language/uvl-models/blob/main/"
+            "Decision_Models/Online_Shop/dm_eShop_DM.csv.uvl"
+        )
+
+        # Import the first file
+        github_button = driver.find_element(By.ID, "upload_from_github")
+        ActionChains(driver).move_to_element(github_button).click(github_button).perform()
+        driver.implicitly_wait(0.5)
+        repo_input = driver.find_element(By.ID, "repoUrl")
+        repo_input.send_keys(file1_path)
+        upload_btn = driver.find_element(By.ID, "confirmGithubUpload")
+        upload_btn.send_keys(Keys.RETURN)
+        driver.implicitly_wait(0.5)
+        upload_error = driver.find_element(By.ID, "github_upload_error").text
+        assert upload_error.strip() == "", "Test failed!"
+        wait_for_page_to_load(driver)
+
+        # Import the second file
+        driver.implicitly_wait(0.5)
+        github_button = driver.find_element(By.ID, "upload_from_github")
+        github_button.send_keys(Keys.RETURN)
+        driver.implicitly_wait(0.5)
+        repo_input = driver.find_element(By.ID, "repoUrl")
+        repo_input.send_keys(file2_path)
+        upload_btn = driver.find_element(By.ID, "confirmGithubUpload")
+        upload_btn.send_keys(Keys.RETURN)
+        driver.implicitly_wait(0.5)
+        upload_error = driver.find_element(By.ID, "github_upload_error").text
+        assert upload_error == "", "Test failed!"
+        wait_for_page_to_load(driver)
+
+        # Add authors in UVL models
+        show_button = driver.find_element(By.ID, "0_button")
+        show_button.send_keys(Keys.RETURN)
+        add_author_uvl_button = driver.find_element(By.ID, "0_form_authors_button")
+        ActionChains(driver).click(add_author_uvl_button).perform()
+        wait_for_page_to_load(driver)
+
+        name_field = driver.find_element(By.NAME, "feature_models-0-authors-2-name")
+        name_field.send_keys("Author3")
+        affiliation_field = driver.find_element(By.NAME, "feature_models-0-authors-2-affiliation")
+        affiliation_field.send_keys("Club3")
+
+        # Check I agree and send form
+        check = driver.find_element(By.ID, "agreeCheckbox")
+        check.send_keys(Keys.SPACE)
+        wait_for_page_to_load(driver)
+
+        upload_btn = driver.find_element(By.ID, "upload_button")
+        ActionChains(driver).move_to_element(upload_btn).click(upload_btn).perform()
+        wait_for_page_to_load(driver)
+        time.sleep(2)  # Force wait time
+
+        assert driver.current_url == f"{host}/dataset/list", "Test failed!"
+
+        # Count final datasets
+        final_datasets = count_datasets(driver, host)
+        assert final_datasets == initial_datasets + 1, "Test failed!"
+
+        print("Test passed!")
+
+    finally:
+
+        # Close the browser
+        close_driver(driver)
+
+
+def test_upload_dataset_from_zip():
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Open the login page
+        driver.get(f"{host}/login")
+        wait_for_page_to_load(driver)
+
+        # Find the username and password field and enter the values
+        email_field = driver.find_element(By.NAME, "email")
+        password_field = driver.find_element(By.NAME, "password")
+
+        email_field.send_keys("user1@example.com")
+        password_field.send_keys("1234")
+
+        # Send the form
+        password_field.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+
+        # Count initial datasets
+        initial_datasets = count_datasets(driver, host)
+
+        # Open the upload dataset
+        driver.get(f"{host}/dataset/upload")
+        wait_for_page_to_load(driver)
+
+        # Find basic info and UVL model and fill values
+        title_field = driver.find_element(By.NAME, "title")
+        title_field.send_keys("Title")
+        desc_field = driver.find_element(By.NAME, "desc")
+        desc_field.send_keys("Description")
+        tags_field = driver.find_element(By.NAME, "tags")
+        tags_field.send_keys("tag1,tag2")
+
+        # Add two authors and fill
+        add_author_button = driver.find_element(By.ID, "add_author")
+        add_author_button.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+        add_author_button.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+
+        name_field0 = driver.find_element(By.NAME, "authors-0-name")
+        name_field0.send_keys("Author0")
+        affiliation_field0 = driver.find_element(By.NAME, "authors-0-affiliation")
+        affiliation_field0.send_keys("Club0")
+        orcid_field0 = driver.find_element(By.NAME, "authors-0-orcid")
+        orcid_field0.send_keys("0000-0000-0000-0000")
+
+        name_field1 = driver.find_element(By.NAME, "authors-1-name")
+        name_field1.send_keys("Author1")
+        affiliation_field1 = driver.find_element(By.NAME, "authors-1-affiliation")
+        affiliation_field1.send_keys("Club1")
+
+        # Path to valid ZIP file
+        file1_path = os.path.abspath("app/modules/dataset/uvl_examples/uvlhub_test_zip.zip")
+
+        # Upload file
+        dropzone = driver.find_element(By.CLASS_NAME, "dz-hidden-input")
+        dropzone.send_keys(file1_path)
+        wait_for_page_to_load(driver)
+
+        # Add authors in UVL models
+        show_button = driver.find_element(By.ID, "0_button")
+        show_button.send_keys(Keys.RETURN)
+        add_author_uvl_button = driver.find_element(By.ID, "0_form_authors_button")
+        add_author_uvl_button.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+
+        name_field = driver.find_element(By.NAME, "feature_models-0-authors-2-name")
+        name_field.send_keys("Author3")
+        affiliation_field = driver.find_element(By.NAME, "feature_models-0-authors-2-affiliation")
+        affiliation_field.send_keys("Club3")
+
+        # Check I agree and send form
+        check = driver.find_element(By.ID, "agreeCheckbox")
+        check.send_keys(Keys.SPACE)
+        wait_for_page_to_load(driver)
+
+        upload_btn = driver.find_element(By.ID, "upload_button")
+        upload_btn.send_keys(Keys.RETURN)
+        wait_for_page_to_load(driver)
+        time.sleep(2)  # Force wait time
+
+        assert driver.current_url == f"{host}/dataset/list", "Test failed!"
+
+        # Count final datasets
+        final_datasets = count_datasets(driver, host)
+        assert final_datasets == initial_datasets + 1, "Test failed!"
+
+        print("Test passed!")
+
+    finally:
+
+        # Close the browser
+        close_driver(driver)
+
+
 # Call the test function
 test_upload_dataset()
+test_upload_dataset_from_github()
+test_upload_dataset_from_zip()

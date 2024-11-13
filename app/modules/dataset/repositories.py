@@ -84,6 +84,13 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
+    def get_synchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DataSet.user_id == current_user_id, DataSet.id == dataset_id, DSMetaData.dataset_doi.isnot(None))
+            .first()
+        )
+
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)

@@ -4,6 +4,16 @@
 
 {% block content %}
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  {% for category, message in messages %}
+    <div id="flash-message" class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+{% endwith %}
     <h1 class="h2 mb-3">
 
         <b>Latest</b> datasets
@@ -41,22 +51,38 @@
                         <div class="row mb-2 mt-4">
 
                             <div class="col-12">
-                                {% for author in dataset.ds_meta_data.authors %}
-                                    <p class="p-0 m-0">
-                                        {{ author.name }}
-                                        {% if author.affiliation %}
-                                            ({{ author.affiliation }})
-                                        {% endif %}
-                                        {% if author.orcid %}
-                                            ({{ author.orcid }})
-                                        {% endif %}
-                                    </p>
-                                {% endfor %}
+                                {% if not dataset.ds_meta_data.anonymized %}
+                                    {% for author in dataset.ds_meta_data.authors %}
+                                        <p class="p-0 m-0">
+                                            {{ author.name }}
+                                            {% if author.affiliation %}
+                                                ({{ author.affiliation }})
+                                            {% endif %}
+                                            {% if author.orcid %}
+                                                ({{ author.orcid }})
+                                            {% endif %}
+                                        </p>
+                                    {% endfor %}
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
                             </div>
 
 
                         </div>
-
+                        <div class="row mb-2">
+                            <span class=" text-secondary">
+                                Uploaded by
+                            </span>
+                                {% if not dataset.ds_meta_data.anonymized %}
+                                <a href="profile/{{dataset.user.id}}">
+                                    {{ dataset.user.profile.surname }}, {{ dataset.user.profile.name }}
+                                </a>
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
+                                               
+                        </div>
                         <div class="row mb-2">
 
                             <div class="col-12">
