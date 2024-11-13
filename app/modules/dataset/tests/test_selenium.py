@@ -188,8 +188,14 @@ def test_upload_dataset_from_github():
         affiliation_field1.send_keys("Club1")
 
         # Valid GitHub link to UVL files
-        file1_path = "https://github.com/Universal-Variability-Language/uvl-models/blob/main/Decision_Models/Mobile_Phone/dm_mobile_phone.csv.uvl"
-        file2_path = "https://github.com/Universal-Variability-Language/uvl-models/blob/main/Decision_Models/Online_Shop/dm_eShop_DM.csv.uvl"
+        file1_path = (
+            "https://github.com/Universal-Variability-Language/uvl-models/blob/main/"
+            "Decision_Models/Mobile_Phone/dm_mobile_phone.csv.uvl"
+        )
+        file2_path = (
+            "https://github.com/Universal-Variability-Language/uvl-models/blob/main/"
+            "Decision_Models/Online_Shop/dm_eShop_DM.csv.uvl"
+        )
 
         # Import the first file
         github_button = driver.find_element(By.ID, "upload_from_github")

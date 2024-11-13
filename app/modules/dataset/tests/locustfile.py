@@ -11,10 +11,10 @@ class DatasetBehavior(TaskSet):
     def dataset(self):
         response = self.client.get("/dataset/upload")
         get_csrf_token(response)
-        
+
     @task
     def change_anonymize_unsync(self):
-        dataset_id = 1  
+        dataset_id = 1
         response = self.client.get(f"/dataset/anonymize/unsync/{dataset_id}/")
         csrf_token = get_csrf_token(response)
 
@@ -28,7 +28,7 @@ class DatasetBehavior(TaskSet):
 
     @task
     def change_anonymize_sync(self):
-        dataset_id = 1  
+        dataset_id = 1
 
         response = self.client.get(f"/dataset/anonymize/{dataset_id}/")
         csrf_token = get_csrf_token(response)

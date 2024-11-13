@@ -94,8 +94,8 @@ def create_dataset():
                 # update DOI
                 deposition_doi = zenodo_service.get_doi(deposition_id)
                 dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
-            except Exception as e:
-                msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+            except Exception:
+                msg = "it has not been possible upload feature models in Zenodo and update the DOI"
                 return jsonify({"message": msg}), 200
 
         # Delete temp folder
@@ -130,10 +130,10 @@ def upload():
             # create temp folder
             if not os.path.exists(temp_folder):
                 os.makedirs(temp_folder)
-            
+
             file_path = os.path.join(temp_folder, file.filename)
             file.save(file_path)
-            
+
             with ZipFile(file_path, "r") as zipf:
                 # Ignore directory structure
                 for member in zipf.namelist():
@@ -142,7 +142,7 @@ def upload():
                         source = zipf.open(member)
                         # If an extracted file with the same name is already in the temp dir, give it a different name
                         if os.path.exists(os.path.join(temp_folder, filename)):
-                        # Generate unique filename (by recursion)
+                            # Generate unique filename (by recursion)
                             base_name, extension = os.path.splitext(member)
                             i = 1
                             while os.path.exists(
@@ -156,7 +156,7 @@ def upload():
 
                         with source, target:
                             shutil.copyfileobj(source, target)
-            
+
             # Delete all files that are not .uvl
             for file in os.listdir(temp_folder):
                 if file[-4:] != ".uvl":
@@ -171,10 +171,10 @@ def upload():
                 ),
                 200,
             )
-            
+
         except Exception as e:
             return jsonify({"message": str(e)}), 500
-    
+
     else:
         if not file or not file.filename.endswith(".uvl"):
             return jsonify({"message": "No valid file"}), 400
@@ -220,7 +220,7 @@ def upload_from_github():
     data = request.get_json()
     url = data.get("url")
     url_split = url.split("/")
-    
+
     try:
         # Do not accept URLs that are not from GitHub or that contain a file that is not .uvl
         if url_split[2] != "github.com":
@@ -228,15 +228,14 @@ def upload_from_github():
         if url_split[-1][-4:] != ".uvl":
             return jsonify({"message": "The imported file is not UVL"}), 400
 
-        headers = {"Accept": "application/vnd.github.raw+json",
-            "X-GitHub-Api-Version": "2022-11-28"}
+        headers = {"Accept": "application/vnd.github.raw+json", "X-GitHub-Api-Version": "2022-11-28"}
         owner = url_split[3]
         repo = url_split[4]
         path = "/".join(url_split[7:])
         response = requests.get(f"https://api.github.com/repos/{owner}/{repo}/contents/{path}", headers=headers)
         if response.status_code != 200:
-            return jsonify({"message": f"GitHub returned an error"}), response.status_code
-    except Exception as e:
+            return jsonify({"message": "GitHub returned an error"}), response.status_code
+    except Exception:
         return jsonify({"message": "Malformed URL. Please check that it follows the specified format."}), 400
 
     contents = response.text
