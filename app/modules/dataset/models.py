@@ -68,7 +68,8 @@ class DSMetaData(db.Model):
     ds_metrics = db.relationship('DSMetrics', uselist=False, backref='ds_meta_data', cascade="all, delete")
     authors = db.relationship('Author', backref='ds_meta_data', lazy=True, cascade="all, delete")
     rating_avg = db.Column(db.Float, default=0.0)
-    
+    anonymized = db.Column(db.Boolean, default=False)
+
 
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -172,12 +173,11 @@ class DatasetRating(db.Model):
     __tablename__ = 'dataset_rating'
 
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.Integer, nullable=False)  # Calificación (por ejemplo, escala de 1 a 5)
-    comment = db.Column(db.Text, nullable=True)  # Comentario opcional del usuario
+    value = db.Column(db.Integer, nullable=False)  
+    comment = db.Column(db.Text, nullable=True)  
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey('ds_meta_data.id'), nullable=False)
 
-    # Relación con el usuario y el dataset
     user = db.relationship('User', backref='dataset_ratings')
     ds_meta_data = db.relationship('DSMetaData', backref=db.backref('ratings', lazy=True))
 

@@ -44,7 +44,6 @@
                         {{ form.surname(class="form-control", placeholder="Enter your surname", required=true, value=surname_value) }}
                         {% for error in form.surname.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
@@ -55,7 +54,6 @@
                         required=true, value=name_value) }}
                         {% for error in form.name.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
@@ -69,7 +67,6 @@
                         {{ form.affiliation(class="form-control", placeholder="Enter your affiliation", required=true, value=affiliation_value) }}
                         {% for error in form.affiliation.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
                         {% endfor %}
                     </div>
 
@@ -84,7 +81,36 @@
                         required=true, value=orcid_value) }}
                         {% for error in form.orcid.errors %}
                             <span style="color: red;">{{ error }}</span>
-                            <br>
+                        {% endfor %}
+                    </div>
+
+                </div>
+    
+                <div class="row form-group mt-3">
+                    <div class="col-12">
+                        {{ form.is_developer.label(class="form-label") }}
+                        
+                        {% set is_developer_value = form.is_developer.data if form.is_developer.data else (current_user.profile.user.is_developer if current_user.profile.user.is_developer else False) %}
+                        
+                        <!-- Marcar la casilla si is_developer_value es True -->
+                        {{ form.is_developer(class="form-check-input", id="is_developer_checkbox", checked=is_developer_value) }}
+                        
+                        {% for error in form.is_developer.errors %}
+                            <span style="color: red;">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+
+                <div id="github-field" class="row form-group mt-3" {% if not form.is_developer.data and not current_user.profile.user.is_developer %}style="display: none;"{% endif %}>
+
+                    <div class="col-12">
+                        {{ form.github_username.label(class="form-label") }}
+                        {% set github_username_value = form.github_username.data if form.github_username.data else (current_user.profile.user.github_username  if current_user.profile.user.github_username else '') %}
+                        {{ form.github_username(class="form-control", placeholder="Enter your GitHub username",
+                        required=true, value=github_username_value) }}
+                        {% for error in form.github_username.errors %}
+                            <span style="color: red;">{{ error }}</span>
                         {% endfor %}
                     </div>
 
@@ -110,7 +136,7 @@
                 {% if error %}
 
                     <div class="mt-3">
-                        <p style="color: red;"><strong>Error:</strong> {{ error }}
+                        <p style="color: red;"><strong>Error:</strong> {{ error }} </p>
                     </div>
 
                 {% endif %}
@@ -124,5 +150,15 @@
 {% endblock %}
 
 {% block scripts %}
+    <script>
+        const checkbox = document.getElementById('is_developer_checkbox');
+        const githubField = document.getElementById('github-field');
+        
+        // Manejar cambios en el checkbox
+        checkbox.addEventListener('change', function() {
+            githubField.style.display = this.checked ? 'block' : 'none';
+        });
+    </script>
+
     <script src="{{ url_for('profile.scripts') }}"></script>
 {% endblock %}

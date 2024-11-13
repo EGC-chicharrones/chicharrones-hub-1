@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+
 from wtforms import StringField, SelectField, FieldList, FormField, SubmitField, TextAreaField, IntegerField, TextAreaField
 from wtforms.validators import DataRequired, URL, Optional, NumberRange
 
@@ -67,6 +68,7 @@ class DataSetForm(FlaskForm):
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
     feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
+    anonymized = BooleanField("Do you want to anonymize the authors?")
 
     submit = SubmitField("Submit")
 
@@ -81,6 +83,7 @@ class DataSetForm(FlaskForm):
             "publication_doi": self.publication_doi.data,
             "dataset_doi": self.dataset_doi.data,
             "tags": self.tags.data,
+            "anonymized": self.anonymized.data
         }
 
     def convert_publication_type(self, value):

@@ -5,6 +5,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 from flask_migrate import Migrate
+from flask_mail import Mail
 
 from core.configuration.configuration import get_app_version
 from core.managers.module_manager import ModuleManager
@@ -18,6 +19,7 @@ load_dotenv()
 # Create the instances
 db = SQLAlchemy()
 migrate = Migrate()
+mail = Mail()
 
 
 def create_app(config_name='development'):
@@ -63,6 +65,9 @@ def create_app(config_name='development'):
             'DOMAIN': os.getenv('DOMAIN', 'localhost'),
             'APP_VERSION': get_app_version()
         }
+
+    # Email verification
+    mail.init_app(app)
 
     return app
 

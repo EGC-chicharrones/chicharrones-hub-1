@@ -64,7 +64,13 @@
                         </span>
                     </div>
                     <div class="col-md-8 col-12">
-                        <a href="#">{{ dataset.user.profile.surname }}, {{ dataset.user.profile.name }}</a>
+                        <a href="#">
+                            {% if not dataset.ds_meta_data.anonymized %}
+                                {{ dataset.user.profile.surname }}, {{ dataset.user.profile.name }}
+                            {% else %}
+                                Anonymous
+                            {% endif %}
+                        </a>                    
                     </div>
 
                 </div>
@@ -77,17 +83,22 @@
                         </span>
                     </div>
                     <div class="col-md-8 col-12">
-                        {% for author in dataset.ds_meta_data.authors %}
-                        <p class="p-0 m-0">
-                            {{ author.name }}
-                            {% if author.affiliation %}
-                            ({{ author.affiliation }})
-                            {% endif %}
-                            {% if author.orcid %}
-                            ({{ author.orcid }})
-                            {% endif %}
-                        </p>
-                        {% endfor %}
+                        {% if not dataset.ds_meta_data.anonymized %}
+                            {% for author in dataset.ds_meta_data.authors %}
+                            <p class="p-0 m-0">
+                                {{ author.name }}
+                                {% if author.affiliation %}
+                                    ({{ author.affiliation }})
+                                {% endif %}
+                                {% if author.orcid %}
+                                    ({{ author.orcid }})
+                                {% endif %}
+                            </p>
+                            {% endfor %}                        
+                        {% else %}
+                            Anonymous
+                        {% endif %}
+
                     </div>
 
 

@@ -4,6 +4,7 @@ import json
 import shutil
 import tempfile
 import uuid
+import requests
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
@@ -75,6 +76,10 @@ def create_dataset():
                 deposition_doi = zenodo_service.get_doi(deposition_id)
                 dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
 
+            except Exception:
+                msg = "it has not been possible upload feature models in Zenodo and update the DOI"
+                return jsonify({"message": msg}), 200
+
             except Exception as exc:
                 logger.exception(f"No se pudo subir a Zenodo o actualizar el DOI: {exc}")
                 return jsonify({"message": "No se pudo subir los modelos a Zenodo y actualizar el DOI"}), 200
@@ -109,32 +114,154 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or not file.filename.endswith(".uvl"):
-        return jsonify({"message": "Archivo inválido"}), 400
+    if file.filename.endswith(".zip"):
+        try:
+            # create temp folder
+            if not os.path.exists(temp_folder):
+                os.makedirs(temp_folder)
 
-    # Creación del folder temporal
+            file_path = os.path.join(temp_folder, file.filename)
+            file.save(file_path)
+
+            with ZipFile(file_path, "r") as zipf:
+                # Ignore directory structure
+                for member in zipf.namelist():
+                    filename = os.path.basename(member)
+                    if filename:
+                        source = zipf.open(member)
+                        # If an extracted file with the same name is already in the temp dir, give it a different name
+                        if os.path.exists(os.path.join(temp_folder, filename)):
+                            # Generate unique filename (by recursion)
+                            base_name, extension = os.path.splitext(member)
+                            i = 1
+                            while os.path.exists(
+                                os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+                            ):
+                                i += 1
+                            new_filename = f"{base_name} ({i}){extension}".split("/")[-1]
+                            target = open(os.path.join(temp_folder, new_filename), "wb")
+                        else:
+                            target = open(os.path.join(temp_folder, filename), "wb")
+
+                        with source, target:
+                            shutil.copyfileobj(source, target)
+
+            # Delete all files that are not .uvl
+            for file in os.listdir(temp_folder):
+                if file[-4:] != ".uvl":
+                    os.remove(os.path.join(temp_folder, file))
+
+            return (
+                jsonify(
+                    {
+                        "message": "UVL uploaded and validated successfully",
+                        "filenames": os.listdir(temp_folder),
+                    }
+                ),
+                200,
+            )
+
+        except Exception as e:
+            return jsonify({"message": str(e)}), 500
+
+    else:
+        if not file or not file.filename.endswith(".uvl"):
+            return jsonify({"message": "No valid file"}), 400
+
+        # create temp folder
+        if not os.path.exists(temp_folder):
+            os.makedirs(temp_folder)
+
+        file_path = os.path.join(temp_folder, file.filename)
+
+        if os.path.exists(file_path):
+            # Generate unique filename (by recursion)
+            base_name, extension = os.path.splitext(file.filename)
+            i = 1
+            while os.path.exists(
+                os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+            ):
+                i += 1
+            new_filename = f"{base_name} ({i}){extension}"
+            file_path = os.path.join(temp_folder, new_filename)
+        else:
+            new_filename = file.filename
+
+        try:
+            file.save(file_path)
+        except Exception as e:
+            return jsonify({"message": str(e)}), 500
+
+        return (
+            jsonify(
+                {
+                    "message": "UVL uploaded and validated successfully",
+                    "filenames": [new_filename],
+                }
+            ),
+            200,
+        )
+
+
+@dataset_bp.route("/dataset/file/upload_from_github", methods=["POST"])
+@login_required
+def upload_from_github():
+    data = request.get_json()
+    url = data.get("url")
+    url_split = url.split("/")
+
+    try:
+        # Do not accept URLs that are not from GitHub or that contain a file that is not .uvl
+        if url_split[2] != "github.com":
+            return jsonify({"message": "The file is not from GitHub"}), 400
+        if url_split[-1][-4:] != ".uvl":
+            return jsonify({"message": "The imported file is not UVL"}), 400
+
+        headers = {"Accept": "application/vnd.github.raw+json", "X-GitHub-Api-Version": "2022-11-28"}
+        owner = url_split[3]
+        repo = url_split[4]
+        path = "/".join(url_split[7:])
+        response = requests.get(f"https://api.github.com/repos/{owner}/{repo}/contents/{path}", headers=headers)
+        if response.status_code != 200:
+            return jsonify({"message": "GitHub returned an error"}), response.status_code
+    except Exception:
+        return jsonify({"message": "Malformed URL. Please check that it follows the specified format."}), 400
+
+    contents = response.text
+    filename = url_split[-1]
+    temp_folder = current_user.temp_folder()
     if not os.path.exists(temp_folder):
         os.makedirs(temp_folder)
 
-    file_path = os.path.join(temp_folder, file.filename)
+    file_path = os.path.join(temp_folder, filename)
 
     if os.path.exists(file_path):
-        # Genera un nombre único
-        base_name, extension = os.path.splitext(file.filename)
+        # Generate unique filename (by recursion)
+        base_name, extension = os.path.splitext(filename)
         i = 1
         while os.path.exists(os.path.join(temp_folder, f"{base_name} ({i}){extension}")):
             i += 1
         new_filename = f"{base_name} ({i}){extension}"
         file_path = os.path.join(temp_folder, new_filename)
     else:
-        new_filename = file.filename
+        new_filename = filename
 
     try:
-        file.save(file_path)
+        with open(file_path, "w") as uvl:
+            uvl.write(contents)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
-    return jsonify({"message": "UVL subido y validado exitosamente", "filename": new_filename}), 200
+
+    return (
+            jsonify(
+                {
+                    "message": "UVL uploaded and validated successfully",
+                    "filenames": [new_filename],
+                }
+            ),
+            200,
+        )
 
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
@@ -208,6 +335,7 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
     return render_template("dataset/view_dataset.html", dataset=dataset)
 
+
 @dataset_bp.route('/dataset/rate/<int:dataset_id>/', methods=['GET'])
 @login_required
 def view_rating_form(dataset_id):
@@ -232,3 +360,34 @@ def create_rating(dataset_id):
 
     return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
 
+
+@dataset_bp.route("/dataset/anonymize/<int:dataset_id>/", methods=["GET", "POST"])
+@login_required
+def change_anonymize_sync(dataset_id):
+    # Get dataset
+    dataset = dataset_service.get_synchronized_dataset(current_user.id, dataset_id)
+
+    return change_anonymize(dataset)
+
+
+@dataset_bp.route("/dataset/anonymize/unsync/<int:dataset_id>/", methods=["GET", "POST"])
+@login_required
+def change_anonymize_unsync(dataset_id):
+    # Get dataset
+    dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+
+    return change_anonymize(dataset)
+
+
+def change_anonymize(dataset):
+    # Coger el actual
+    current_anonymize = dataset.ds_meta_data.anonymized
+    changes = {
+        "anonymized": not current_anonymize
+    }
+
+    # Cambiarlo y subirlo
+    dsmetadata_service.update(dataset.id, **changes)
+
+    # Redirigir al listado de datasets
+    return redirect(url_for('dataset.list_dataset'))
