@@ -1,5 +1,6 @@
 import os
-import shutil
+import random
+from datetime import datetime, timezone
 from app.modules.auth.models import User
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
 from app.modules.hubfile.models import Hubfile
@@ -9,28 +10,34 @@ from app.modules.dataset.models import (
     DSMetaData,
     PublicationType,
     DSMetrics,
-    Author)
-from datetime import datetime, timezone
-from dotenv import load_dotenv
-
+    DatasetRating,
+    Author
+)
+from app import db
 
 class DataSetSeeder(BaseSeeder):
-
-    priority = 2  # Lower priority
+    priority = 2  # Prioridad más baja
 
     def run(self):
-        # Retrieve users
+        # Buscar usuarios, y si no existen, crearlos temporalmente para el seeder
         user1 = User.query.filter_by(email='user1@example.com').first()
         user2 = User.query.filter_by(email='user2@example.com').first()
 
-        if not user1 or not user2:
-            raise Exception("Users not found. Please seed users first.")
+        if not user1:
+            user1 = User(email='user1@example.com', password="hashed_password1")
+            db.session.add(user1)
+            db.session.flush()  # Inserta sin confirmar la transacción
 
-        # Create DSMetrics instance
+        if not user2:
+            user2 = User(email='user2@example.com', password="hashed_password2")
+            db.session.add(user2)
+            db.session.flush()  # Inserta sin confirmar la transacción
+
+        # Crear DSMetrics
         ds_metrics = DSMetrics(number_of_models='5', number_of_features='50')
         seeded_ds_metrics = self.seed([ds_metrics])[0]
 
-        # Create DSMetaData instances
+        # Crear DSMetaData
         ds_meta_data_list = [
             DSMetaData(
                 deposition_id=1 + i,
@@ -45,7 +52,6 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
 
-        # Create Author instances and associate with DSMetaData
         authors = [
             Author(
                 name=f'Author {i+1}',
@@ -56,7 +62,6 @@ class DataSetSeeder(BaseSeeder):
         ]
         self.seed(authors)
 
-        # Create DataSet instances
         datasets = [
             DataSet(
                 user_id=user1.id if i % 2 == 0 else user2.id,
@@ -66,59 +71,32 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_datasets = self.seed(datasets)
 
-        # Assume there are 12 UVL files, create corresponding FMMetaData and FeatureModel
-        fm_meta_data_list = [
-            FMMetaData(
-                uvl_filename=f'file{i+1}.uvl',
-                title=f'Feature Model {i+1}',
-                description=f'Description for feature model {i+1}',
-                publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
-                publication_doi=f'10.1234/fm{i+1}',
-                tags='tag1, tag2',
-                uvl_version='1.0'
-            ) for i in range(12)
-        ]
-        seeded_fm_meta_data = self.seed(fm_meta_data_list)
+        ratings = []
+        for dataset in ds_meta_data_list:
+            num_ratings = random.randint(1, 3)
+            for _ in range(num_ratings):
+                rating = DatasetRating(
+                    value=random.randint(1, 5),
+                    comment=f"Comentario para el dataset {dataset.id}",
+                    user_id=random.choice([user1.id, user2.id]),
+                    ds_meta_data_id=dataset.id,
+                )
+                ratings.append(rating)
 
-        # Create Author instances and associate with FMMetaData
-        fm_authors = [
-            Author(
-                name=f'Author {i+5}',
-                affiliation=f'Affiliation {i+5}',
-                orcid=f'0000-0000-0000-000{i+5}',
-                fm_meta_data_id=seeded_fm_meta_data[i].id
-            ) for i in range(12)
-        ]
-        self.seed(fm_authors)
+        self.seed(ratings)
+        db.session.commit() 
 
-        feature_models = [
-            FeatureModel(
-                data_set_id=seeded_datasets[i // 3].id,
-                fm_meta_data_id=seeded_fm_meta_data[i].id
-            ) for i in range(12)
-        ]
-        seeded_feature_models = self.seed(feature_models)
+        initialize_rating_avg()
+        print("Dataset ratings successfully seeded.")
 
-        # Create files, associate them with FeatureModels and copy files
-        load_dotenv()
-        working_dir = os.getenv('WORKING_DIR', '')
-        src_folder = os.path.join(working_dir, 'app', 'modules', 'dataset', 'uvl_examples')
-        for i in range(12):
-            file_name = f'file{i+1}.uvl'
-            feature_model = seeded_feature_models[i]
-            dataset = next(ds for ds in seeded_datasets if ds.id == feature_model.data_set_id)
-            user_id = dataset.user_id
+def initialize_rating_avg():
+    ds_meta_datas = DSMetaData.query.all()
+    
+    for ds_meta_data in ds_meta_datas:
+        if ds_meta_data.ratings:
+            ds_meta_data.rating_avg = sum(rating.value for rating in ds_meta_data.ratings) / len(ds_meta_data.ratings)
+        else:
+            ds_meta_data.rating_avg = 0.0 
+        db.session.add(ds_meta_data) 
 
-            dest_folder = os.path.join(working_dir, 'uploads', f'user_{user_id}', f'dataset_{dataset.id}')
-            os.makedirs(dest_folder, exist_ok=True)
-            shutil.copy(os.path.join(src_folder, file_name), dest_folder)
-
-            file_path = os.path.join(dest_folder, file_name)
-
-            uvl_file = Hubfile(
-                name=file_name,
-                checksum=f'checksum{i+1}',
-                size=os.path.getsize(file_path),
-                feature_model_id=feature_model.id
-            )
-            self.seed([uvl_file])
+    db.session.commit() 

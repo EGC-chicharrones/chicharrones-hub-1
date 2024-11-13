@@ -67,6 +67,7 @@ class DSMetaData(db.Model):
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey('ds_metrics.id'))
     ds_metrics = db.relationship('DSMetrics', uselist=False, backref='ds_meta_data', cascade="all, delete")
     authors = db.relationship('Author', backref='ds_meta_data', lazy=True, cascade="all, delete")
+    rating_avg = db.Column(db.Float, default=0.0)
     anonymized = db.Column(db.Boolean, default=False)
 
 
@@ -79,10 +80,7 @@ class DataSet(db.Model):
 
     ds_meta_data = db.relationship('DSMetaData', backref=db.backref('data_set', uselist=False))
     feature_models = db.relationship('FeatureModel', backref='data_set', lazy=True, cascade="all, delete")
-
-    ratings = db.relationship('DatasetRating', backref='dataset', lazy=True, cascade="all, delete-orphan")
-
-
+    
     def name(self):
         return self.ds_meta_data.title
 
@@ -132,7 +130,7 @@ class DataSet(db.Model):
             'files_count': self.get_files_count(),
             'total_size_in_bytes': self.get_file_total_size(),
             'total_size_in_human_format': self.get_file_total_size_for_human(),
-            'ratings': [rating.to_dict() for rating in self.ratings],
+            # 'ratings': [rating.to_dict() for rating in self.ratings],
         }
 
     def __repr__(self):
@@ -172,17 +170,25 @@ class DOIMapping(db.Model):
     dataset_doi_new = db.Column(db.String(120))
 
 class DatasetRating(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    rating = db.Column(db.Integer, nullable=False) #ToDo: Calificación del 1 al 5
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=False)
-    comment = db.Column(db.Text, nullable = True)
+    __tablename__ = 'dataset_rating'
 
-    #ToDo: A lo mejor, esto no sirve
+    id = db.Column(db.Integer, primary_key=True)
+    value = db.Column(db.Integer, nullable=False)  
+    comment = db.Column(db.Text, nullable=True)  
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ds_meta_data_id = db.Column(db.Integer, db.ForeignKey('ds_meta_data.id'), nullable=False)
+
+    user = db.relationship('User', backref='dataset_ratings')
+    ds_meta_data = db.relationship('DSMetaData', backref=db.backref('ratings', lazy=True))
+
     def to_dict(self):
         return {
-            'rating': self.rating,
+            'id': self.id,
+            'value': self.value,
             'comment': self.comment,
             'user_id': self.user_id,
-            'dataset_id': self.dataset_id
+            'ds_meta_data_id': self.ds_meta_data_id,
         }
+
+    def __repr__(self):
+        return f'DatasetRating<User={self.user_id}, Dataset={self.ds_meta_data_id}, Value={self.value}>'

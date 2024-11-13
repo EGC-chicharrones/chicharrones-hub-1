@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Valoración</title>
+</head>
+<body>
+    <h1>Crear Valoración</h1>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.value.label }}<br>
+            {{ form.value(size=5) }}
+            {% if form.value.errors %}
+                <span style="color: red;">{{ form.value.errors[0] }}</span>
+            {% endif %}
+        </p>
+        <p>
+            {{ form.comment.label }}<br>
+            {{ form.comment(rows=4, cols=40) }}
+            {% if form.comment.errors %}
+                <span style="color: red;">{{ form.comment.errors[0] }}</span>
+            {% endif %}
+        </p>
+        <p><button type="submit">Submit Rating</button></p>
+    </form>
+</body>
+</html>
