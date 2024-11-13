@@ -13,7 +13,7 @@ from app.modules.dataset.models import (
     DatasetRating,
     Author
 )
-from app import db  # Asegúrate de importar db para commit y flush
+from app import db
 
 class DataSetSeeder(BaseSeeder):
     priority = 2  # Prioridad más baja
@@ -52,7 +52,6 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
 
-        # Crear instancias de Author y asociarlas con DSMetaData
         authors = [
             Author(
                 name=f'Author {i+1}',
@@ -63,7 +62,6 @@ class DataSetSeeder(BaseSeeder):
         ]
         self.seed(authors)
 
-        # Crear instancias de DataSet
         datasets = [
             DataSet(
                 user_id=user1.id if i % 2 == 0 else user2.id,
@@ -73,7 +71,6 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_datasets = self.seed(datasets)
 
-        # Crear DatasetRating para cada DataSet
         ratings = []
         for dataset in ds_meta_data_list:
             num_ratings = random.randint(1, 3)
@@ -86,8 +83,20 @@ class DataSetSeeder(BaseSeeder):
                 )
                 ratings.append(rating)
 
-        # Insertar las valoraciones en la base de datos
         self.seed(ratings)
-        db.session.commit()  # Confirmar todos los cambios al final
+        db.session.commit() 
 
+        initialize_rating_avg()
         print("Dataset ratings successfully seeded.")
+
+def initialize_rating_avg():
+    ds_meta_datas = DSMetaData.query.all()
+    
+    for ds_meta_data in ds_meta_datas:
+        if ds_meta_data.ratings:
+            ds_meta_data.rating_avg = sum(rating.value for rating in ds_meta_data.ratings) / len(ds_meta_data.ratings)
+        else:
+            ds_meta_data.rating_avg = 0.0 
+        db.session.add(ds_meta_data) 
+
+    db.session.commit() 

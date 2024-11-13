@@ -157,16 +157,12 @@
                 <div class="row mb-4">
                     <div class="col-md-4 col-12">
                         <span class=" text-secondary">
-                            Rating
+                            Rating: 
                         </span>
-                    </div>
-                    <div class="col-md-8 col-12">
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-warning text-dark">{{ dataset.rating }} /5</span> 
-                            <a href="{{ url_for('dataset.get_avg_rating_view_dataset', dataset_id=dataset.id) }}" class="btn btn-outline-primary btn-sm ms-3" style="border-radius: 5px;">
-                                <i data-feather="star" class="center-button-icon"></i> Ratings
-                            </a>
-                        </div>
+                        <span class="badge bg-warning text-dark">{{ dataset.ds_meta_data.rating_avg }} /5</span> 
+                        <a href="{{ url_for('dataset.view_rating_form', dataset_id=dataset.id) }}" class="btn btn-outline-primary btn-sm ms-3" style="border-radius: 5px;">
+                            <i data-feather="star" class="center-button-icon"></i> Ratings
+                        </a>
                     </div>
 
                 </div>

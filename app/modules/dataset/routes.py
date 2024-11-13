@@ -212,11 +212,10 @@ def get_unsynchronized_dataset(dataset_id):
 @login_required
 def view_rating_form(dataset_id):
     form = RatingForm()
-    dataset = dataset_service.get_or_404(dataset_id)  # Obtener el dataset o 404
-    ds_meta_data_id = dataset.ds_meta_data.id  # Obtenemos el `ds_meta_data_id`
-    ratings = rating_service.get_ratings(ds_meta_data_id)  # Obtenemos directamente las valoraciones
+    dataset = dataset_service.get_or_404(dataset_id)
+    ds_meta_data_id = dataset.ds_meta_data.id
+    ratings = rating_service.get_ratings(ds_meta_data_id)
 
-    # Renderiza la página del formulario de rating
     return render_template('dataset/view_ratings.html', form=form, dataset=dataset, ratings=ratings)
 
 
@@ -227,38 +226,8 @@ def create_rating(dataset_id):
     user_id = current_user.id
     value = request.form.get('value')  
     comment = request.form.get('comment')  
+    dataset = dataset_service.get_or_404(dataset_id)  
+    ds_meta_data_id = dataset.ds_meta_data.id  
+    rating_service.create_rating(user_id, ds_meta_data_id, value, comment)
 
-    new_rating = rating_service.create_rating(dataset_id, user_id, value, comment)
-
-    dataset = dataset_service.get_synchronized(dataset_id)
-    dataset_ratings = rating_service.get_ratings(dataset_id)
-    
-    return render_template("dataset/view_ratings.html", dataset=dataset, dataset_ratings=dataset_ratings, new_rating=new_rating)
-
-@dataset_bp.route('/dataset/avg_rating/<int:dataset_id>/', methods=['GET'])
-@login_required
-def get_avg_rating_view_dataset(dataset_id):
-    avg_rating = rating_service.get_avg_rating(dataset_id)
-
-    # Llamamos a get_synchronized para obtener los datasets
-    datasets = dataset_service.get_synchronized(dataset_id)
-    
-    # Verificamos si encontramos un dataset válido
-    if isinstance(datasets, list) and len(datasets) > 0:
-        dataset = datasets[0]  # Obtenemos el primer dataset de la lista
-    else:
-        dataset = None  # No se encuentra el dataset, asignamos None
-
-    # Si no hay dataset, redirigir o mostrar un mensaje adecuado
-    if not dataset:
-        return redirect(url_for('dataset.delete'))  # Redirige a la lista de datasets, por ejemplo
-
-    # Pasamos 'dataset' a la plantilla
-    return render_template(
-        'dataset/index.html',
-        dataset=dataset,  # Ahora 'dataset' es un solo objeto (no una lista)
-        avg_rating=avg_rating
-    )
-
-
-
+    return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))

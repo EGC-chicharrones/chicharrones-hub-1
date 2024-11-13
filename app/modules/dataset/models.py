@@ -168,22 +168,6 @@ class DOIMapping(db.Model):
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
 
-# class DatasetRating(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     rating = db.Column(db.Integer, nullable=False) #ToDo: Calificación del 1 al 5
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-#     dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=False)
-#     comment = db.Column(db.Text, nullable = True)
-
-#     #ToDo: A lo mejor, esto no sirve
-#     def to_dict(self):
-#         return {
-#             'rating': self.rating,
-#             'comment': self.comment,
-#             'user_id': self.user_id,
-#             'dataset_id': self.dataset_id
-#         }
-
 class DatasetRating(db.Model):
     __tablename__ = 'dataset_rating'
 
