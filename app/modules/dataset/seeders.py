@@ -91,12 +91,12 @@ class DataSetSeeder(BaseSeeder):
 
 def initialize_rating_avg():
     ds_meta_datas = DSMetaData.query.all()
-    
+
     for ds_meta_data in ds_meta_datas:
         if ds_meta_data.ratings:
             ds_meta_data.rating_avg = sum(rating.value for rating in ds_meta_data.ratings) / len(ds_meta_data.ratings)
         else:
-            ds_meta_data.rating_avg = 0.0 
-        db.session.add(ds_meta_data) 
+            ds_meta_data.rating_avg = 0.0
+        db.session.add(ds_meta_data)
 
-    db.session.commit() 
+    db.session.commit()
