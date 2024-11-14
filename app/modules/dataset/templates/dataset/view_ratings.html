@@ -1,0 +1,130 @@
+{% extends "base_template.html" %}
+
+{% block title %}View Ratings for {{ dataset.ds_meta_data.title }}{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Ratings for Dataset: {{ dataset.ds_meta_data.title }}</h1>
+
+<div class="col-12 mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Add a Rating</h5>
+            <form action="{{ url_for('dataset.create_rating', dataset_id=dataset.id) }}" method="post">
+                <div class="row">
+                    <div class="col-md-2">
+                        <label for="value" class="form-label">Rating (1-5)</label>
+                        <!-- Aquí van las estrellas -->
+                        <div class="star-rating" id="starRating">
+                            <span class="star" data-value="1">&#9733;</span>
+                            <span class="star" data-value="2">&#9733;</span>
+                            <span class="star" data-value="3">&#9733;</span>
+                            <span class="star" data-value="4">&#9733;</span>
+                            <span class="star" data-value="5">&#9733;</span>
+                        </div>
+                        <!-- Este input oculto enviará el valor de la calificación seleccionada -->
+                        <input type="hidden" id="value" name="value" required>
+                        <!-- Contenedor para mostrar el texto sobrepuesto -->
+                        <div id="ratingText" class="mt-2" style="font-weight: bold; color: #555;"></div>
+                    </div>
+                    <div class="col-md-10">
+                        <label for="comment" class="form-label">Comment (optional)</label>
+                        <textarea class="form-control" id="comment" name="comment" maxlength="155" rows="2" placeholder="Enter your comment here (max 155 characters)"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Submit Rating</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Agrega los estilos para las estrellas -->
+<style>
+    .star-rating .star {
+        font-size: 1.5em;
+        color: #ccc;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .star-rating .star.selected,
+    .star-rating .star:hover,
+    .star-rating .star:hover.star {
+        color: #FFD700;
+    }
+</style>
+
+<!-- Agrega el JavaScript para la interactividad -->
+<script>
+    const stars = document.querySelectorAll('.star-rating .star');
+    const ratingInput = document.getElementById('value');
+    const ratingText = document.getElementById('ratingText');
+
+    // Texto de retroalimentación
+    const ratingMessages = {
+        1: 'Terrible',
+        2: 'Bad',
+        3: 'OK',
+        4: 'Good',
+        5: 'Excellent'
+    };
+
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-value');
+            ratingInput.value = rating;
+
+            // Mostrar el texto de retroalimentación sobrepuesto
+            ratingText.textContent = ratingMessages[rating];
+
+            // Resalta las estrellas seleccionadas
+            stars.forEach(s => s.classList.remove('selected'));
+            this.classList.add('selected');
+            let previousStar = this.previousElementSibling;
+            while (previousStar) {
+                previousStar.classList.add('selected');
+                previousStar = previousStar.previousElementSibling;
+            }
+        });
+    });
+</script>
+
+
+
+{% if ratings %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5>Ratings</h5>
+                <div class="row">
+                    {% for rating in ratings %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title">User ID: {{ rating.user_id }}</h6>
+                                    <div class="star-rating mb-2">
+                                        {% for i in range(rating.value) %}
+                                            <span style="color: gold;">&#9733;</span>
+                                        {% endfor %}
+                                    </div>
+                                    <p class="card-text">{{ rating.comment or "No comment" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted text-center">
+                    <em>No ratings available for this dataset yet.</em>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+{% endblock %}

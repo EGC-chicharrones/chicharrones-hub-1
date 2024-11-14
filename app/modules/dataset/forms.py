@@ -1,6 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, FieldList, FormField, SubmitField, TextAreaField, BooleanField
-from wtforms.validators import DataRequired, URL, Optional
+
+from wtforms import BooleanField, StringField, SelectField, FieldList, FormField
+from wtforms import SubmitField, TextAreaField, IntegerField
+from wtforms.validators import DataRequired, URL, Optional, NumberRange
 
 from app.modules.dataset.models import PublicationType
 
@@ -96,3 +98,8 @@ class DataSetForm(FlaskForm):
 
     def get_feature_models(self):
         return [fm.get_feature_model() for fm in self.feature_models]
+
+
+class RatingForm(FlaskForm):
+    value = IntegerField('Value', validators=[DataRequired(), NumberRange(min=1, max=5)])
+    comment = TextAreaField('Comment', validators=[])
