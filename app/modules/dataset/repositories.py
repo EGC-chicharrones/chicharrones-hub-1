@@ -122,6 +122,10 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
+    def get_all_dataset_ids(self):
+        # Devuelve[(1,), (2,), (3,)] -->  [1,2,3]
+        return [row[0] for row in self.model.query.with_entities(self.model.id).all()]
+        
 
 class DOIMappingRepository(BaseRepository):
     def __init__(self):
