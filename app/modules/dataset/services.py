@@ -4,8 +4,11 @@ import hashlib
 import shutil
 from typing import Optional
 import uuid
+import tempfile
 
 from flask import request, flash, redirect, render_template
+
+from zipfile import ZipFile
 
 from app import db
 from app.modules.dataset.rating_repository import RatingRepository
@@ -77,7 +80,7 @@ class DataSetService(BaseService):
         return self.repository.get_unsynchronized_dataset(current_user_id, dataset_id)
 
     def get_datasets_ids(self):
-        return self.repository.get_all_dataset_ids()()
+        return self.repository.get_all_dataset_ids()
 
     def latest_synchronized(self):
         return self.repository.latest_synchronized()
