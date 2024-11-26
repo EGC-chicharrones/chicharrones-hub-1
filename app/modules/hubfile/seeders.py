@@ -6,6 +6,7 @@ from app.modules.hubfile.models import Hubfile
 class HubfileSeeder(BaseSeeder):
     
     priority = 12
+    
     def run(self):
 
         data = [
