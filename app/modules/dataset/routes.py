@@ -378,6 +378,10 @@ def change_anonymize_unsync(dataset_id):
 
     return change_anonymize(dataset)
 
+@dataset_bp.route('/dataset/chatbot', methods=['GET'])
+def chatbot():
+    return render_template('dataset/chatbot.html')
+
 
 def change_anonymize(dataset):
     # Coger el actual

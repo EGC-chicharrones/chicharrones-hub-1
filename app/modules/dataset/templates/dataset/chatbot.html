@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<hmtl lang="es">
+<head>
+</head>
+<body>
+    <h1>Genereador de texto Google Gemini</h1>
+    <input type="text" id="inputText" placeholder="Escribe algo aquí...">
+    <button id="generateButton">Generar</button>
+    <p id="responseText"></p>
+
+    <script type="importmap">
+        {
+          "imports": {
+            "@google/generative-ai": "https://esm.run/@google/generative-ai"
+          }
+        }
+      </script>
+      
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai"
+
+        // Fetch API_KEY
+        const API_KEY = "AIzaSyBiFLtjoCgkYEbce0jT0Ra1DI2Ib2FvlLE";
+        const genAI = new GoogleGenerativeAI (API_KEY);
+
+        document.getElementById('generateButton').addEventListener('click', async () => {
+            const inputText = document.getElementById('inputText').value;
+            const model = genAI.getGenerativeModel({model:"gemini-1.5-flash"});
+            const prompt = inputText;
+
+            try{
+                const result = await model.generateContent(prompt)
+                const response = await result.response;
+                document.getElementById('responseText').innerText = response.text();
+            } catch(error){
+                console.error('Error al generar contenido', error);
+            }
+        });
+    </script>
+</body>     
+</hmtl>
