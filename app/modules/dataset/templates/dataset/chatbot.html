@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <style>
+    /* Estilos CSS */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f2f6fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #1f4e79;
+    }
+
+    #chatContainer {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    #chatDisplay {
+      height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      margin-bottom: 10px;
+    }
+
+    .user-message {
+      text-align: right;
+      color: #1f4e79;
+    }
+
+    .ai-message {
+      text-align: left;
+      color: #ff7b00;
+    }
+
+    #inputContainer {
+      display: flex;
+      gap: 10px;
+    }
+
+    #inputText {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    #generateButton {
+      background-color: #ff7b00;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    #generateButton:hover {
+      background-color: #e86a00;
+    }
+
+    #statusMessage {
+      font-style: italic;
+      color: #888;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Chat Google Gemini</h1>
+  </header>
+  <div id="chatContainer">
+    <div id="chatDisplay"></div>
+    <div id="inputContainer">
+      <input type="text" id="inputText" placeholder="Escribe algo aquí...">
+      <button id="generateButton">Enviar</button>
+    </div>
+    <p id="statusMessage"></p>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import { GoogleGenerativeAI } from "@google/generative-ai";
+
+    const API_KEY = "AIzaSyBiFLtjoCgkYEbce0jT0Ra1DI2Ib2FvlLE";
+    const genAI = new GoogleGenerativeAI(API_KEY);
+
+    const chatDisplay = document.getElementById('chatDisplay');
+    const statusMessage = document.getElementById('statusMessage');
+    const inputText = document.getElementById('inputText');
+    const generateButton = document.getElementById('generateButton');
+
+    const appendMessage = (text, type) => {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message', type === 'user' ? 'user-message' : 'ai-message');
+      messageElement.innerText = text;
+      chatDisplay.appendChild(messageElement);
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    };
+
+    generateButton.addEventListener('click', async () => {
+      const userInput = inputText.value.trim();
+      if (!userInput) return;
+
+      // Mostrar el mensaje del usuario en el chat
+      appendMessage(userInput, 'user');
+      inputText.value = '';
+      statusMessage.innerText = 'Pensando...';
+
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(userInput);
+        const response = await result.response;
+
+        // Mostrar la respuesta de la IA en el chat
+        appendMessage(response.text(), 'ai');
+        statusMessage.innerText = '';
+      } catch (error) {
+        console.error('Error al generar contenido', error);
+        statusMessage.innerText = 'Hubo un error al generar la respuesta.';
+      }
+    });
+  </script>
+</body>
+</html>
