@@ -3,7 +3,8 @@ import os
 import app
 
 from discord.ext import commands
-from app.discord.embed import help_embed, help_embed_slash
+from app.discord.embed import dataset_embed_slash, help_embed, help_embed_slash
+from app.discord.pagination import Pagination
 
 
 def start_bot(name):
@@ -34,14 +35,24 @@ def start_bot(name):
         await interaction.response.send_message(embed=help_embed_slash(interaction))
 
     @bot.tree.command(name="latest_datasets",
-                      description="Sends a list of the 5 latest datasets. Not a final implementation.")
-    async def slash_latest_datasets(interaction: discord.Interaction):
-        # TODO: Pass data to an embed builder and add paging.
+                      description="Sends a list of the 5 latest datasets.")
+    async def slash_latest_datasets_page(interaction: discord.Interaction):
+        from app.modules.dataset.models import DataSet
         from app.modules.dataset.repositories import DataSetRepository
+
+        async def get_page(page: int):
+            emb = embeds[page-1]
+            n = len(datasets)
+            emb.set_footer(text=f"UVLHUB.IO · Page {page} from {n}", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+            return emb, n
+        
         with ap.app_context():
             repo = DataSetRepository()
             datasets = DataSetRepository.latest_synchronized(repo)
-            message = "\n".join(f"Dataset with ID {dataset.id}: {dataset.name()}" for dataset in datasets)
-            await interaction.response.send_message(message)
+            embeds = []
+            for dataset in datasets:
+                embeds.append(dataset_embed_slash(interaction, dataset))
+            # await interaction.response.send_message(embed=embeds[0])
+            await Pagination(interaction, get_page).navigate()
 
     bot.run(token)

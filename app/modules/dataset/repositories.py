@@ -3,7 +3,7 @@ import logging
 from flask_login import current_user
 from typing import Optional
 
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, orm
 
 from app.modules.dataset.models import (
     Author,

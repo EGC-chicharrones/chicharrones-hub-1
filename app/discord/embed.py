@@ -1,3 +1,4 @@
+from math import floor
 import discord
 from discord.ext import commands
 import datetime
@@ -40,4 +41,21 @@ def default_embed(ctx, desc, title="UVLHUB.IO", name=None, field_desc=None, thum
     if name and field_desc:
         embed.add_field(name=name, desc=field_desc)
     
+    return embed
+
+
+def dataset_embed_slash(interaction: discord.Interaction, dataset):
+    embed = discord.Embed(title=f"Dataset: {dataset.name()}", colour=discord.Colour(0x78dd1), description=dataset.ds_meta_data.description, timestamp=datetime.datetime.now())
+
+    # TODO: Replace with uvlhub logo
+    embed.set_thumbnail(url="https://cdn.discordapp.com/embed/avatars/0.png")
+    embed.set_footer(text="UVLHUB.IO", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+
+    # embed.add_field(name="Uploaded by:", value=f"{dataset.user.profile.surname}, {dataset.user.profile.name}")
+    embed.add_field(name="Authors:", value=", ".join(f"{author.name} ({author.affiliation}) ({author.orcid})" for author in dataset.ds_meta_data.authors))
+    embed.add_field(name="Publication DOI:", value=dataset.ds_meta_data.publication_doi)
+    embed.add_field(name="Tags:", value=dataset.ds_meta_data.tags)
+    if dataset.ds_meta_data.rating_avg:
+        embed.add_field(name="Rating:", value=(str(dataset.ds_meta_data.rating_avg) + "  " + ":star: " * floor(dataset.ds_meta_data.rating_avg)))
+
     return embed
