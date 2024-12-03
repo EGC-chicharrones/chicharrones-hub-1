@@ -1,5 +1,7 @@
+import tempfile
 from typing import Literal
 from enum import Enum
+from zipfile import ZipFile
 import discord
 import os
 import app
@@ -92,5 +94,35 @@ def start_bot(name):
                     "We have not found any datasets that meet your search criteria. How about trying some others?", "No datasets found"))
             else:
                 await Pagination(interaction, get_page).navigate()
+
+
+    @bot.tree.command(name="download_dataset", description="Obtain all UVL models from the dataset in a zip file. Not a final implementation.")
+    async def slash_download_dataset(interaction: discord.Interaction, dataset_id: int):
+        from app.modules.dataset.services import DataSetService
+
+        with ap.app_context():
+            def download_dataset(dataset_id):
+                dataset = DataSetService().get_or_404(dataset_id)
+                file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+
+                temp_dir = tempfile.mkdtemp()
+                zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
+
+                with ZipFile(zip_path, "w") as zipf:
+                    for subdir, dirs, files in os.walk(file_path):
+                        for file in files:
+                            full_path = os.path.join(subdir, file)
+                            relative_path = os.path.relpath(full_path, file_path)
+                            zipf.write(full_path, arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path))
+                
+                return dataset, zip_path
+            
+            try:
+                dataset, zip_path = download_dataset(dataset_id)
+                await interaction.response.send_message(file= discord.File(zip_path), 
+                            embed=default_embed("Here are the UVL models of the dataset you requested:", f"{dataset.name()} downloaded successfully"))
+            except:
+                await interaction.response.send_message(
+                            embed=default_embed("The dataset that you were looking for has not been found.", "Not Found"))
 
     bot.run(token)
