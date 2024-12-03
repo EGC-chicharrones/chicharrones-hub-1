@@ -40,11 +40,12 @@ def start_bot(name):
                       description="Sends a list of the 5 latest datasets.")
     async def slash_latest_datasets_page(interaction: discord.Interaction):
         from app.modules.dataset.repositories import DataSetRepository
+        from app.modules.profile.models import UserProfile
 
         async def get_page(page: int):
             emb = embeds[page-1]
             n = len(datasets)
-            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
             return emb, n
         
         with ap.app_context():
@@ -52,8 +53,11 @@ def start_bot(name):
             datasets = DataSetRepository.latest_synchronized(repo)
             embeds = []
             for dataset in datasets:
-                embeds.append(dataset_embed_slash(interaction, dataset))
-            # await interaction.response.send_message(embed=embeds[0])
+                user_profile = UserProfile.query.filter_by(user_id=dataset.user_id).first()
+                embeds.append(dataset_embed_slash(interaction, dataset, user_profile))
+            if len(embeds) == 0:
+                await interaction.response.send_message(embed=default_embed(
+                    "We have not found any datasets. This most likely means that there are none in the database.", "No datasets found"))
             await Pagination(interaction, get_page).navigate()
     
     # Make a new publication_type enum that includes Any,
@@ -68,11 +72,12 @@ def start_bot(name):
                       description="Search for datasets by title, description, authors, tags, UVL files...")
     async def slash_search_datasets(interaction: discord.Interaction, query: str, sorting: Literal["newest", "oldest"], publication_type: PublicationType):
         from app.modules.explore.repositories import ExploreRepository
+        from app.modules.profile.models import UserProfile
 
         async def get_page(page: int):
             emb = embeds[page-1]
             n = len(datasets)
-            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
             return emb, n
         
         with ap.app_context():
@@ -80,7 +85,8 @@ def start_bot(name):
             datasets = ExploreRepository.filter(repo, query, sorting, publication_type.name.lower())
             embeds = []
             for dataset in datasets:
-                embeds.append(dataset_embed_slash(interaction, dataset))
+                user_profile = UserProfile.query.filter_by(user_id=dataset.user_id).first()
+                embeds.append(dataset_embed_slash(interaction, dataset, user_profile))
             if len(embeds) == 0:
                 await interaction.response.send_message(embed=default_embed(
                     "We have not found any datasets that meet your search criteria. How about trying some others?", "No datasets found"))
