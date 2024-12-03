@@ -1,9 +1,11 @@
+from typing import Literal
+from enum import Enum
 import discord
 import os
 import app
 
 from discord.ext import commands
-from app.discord.embed import dataset_embed_slash, help_embed, help_embed_slash
+from app.discord.embed import dataset_embed_slash, default_embed, help_embed, help_embed_slash
 from app.discord.pagination import Pagination
 
 
@@ -37,13 +39,12 @@ def start_bot(name):
     @bot.tree.command(name="latest_datasets",
                       description="Sends a list of the 5 latest datasets.")
     async def slash_latest_datasets_page(interaction: discord.Interaction):
-        from app.modules.dataset.models import DataSet
         from app.modules.dataset.repositories import DataSetRepository
 
         async def get_page(page: int):
             emb = embeds[page-1]
             n = len(datasets)
-            emb.set_footer(text=f"UVLHUB.IO · Page {page} from {n}", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
             return emb, n
         
         with ap.app_context():
@@ -54,5 +55,36 @@ def start_bot(name):
                 embeds.append(dataset_embed_slash(interaction, dataset))
             # await interaction.response.send_message(embed=embeds[0])
             await Pagination(interaction, get_page).navigate()
+    
+    # Make a new publication_type enum that includes Any,
+    # as this is not meant to be included in the original enum,
+    # but is necessary for the bot.
+    from app.modules.dataset.models import PublicationType
+
+    types = ['ANY'] + [t.name for t in PublicationType]
+    PublicationType = Enum('PublicationType', types)
+
+    @bot.tree.command(name="search_datasets",
+                      description="Search for datasets by title, description, authors, tags, UVL files...")
+    async def slash_search_datasets(interaction: discord.Interaction, query: str, sorting: Literal["newest", "oldest"], publication_type: PublicationType):
+        from app.modules.explore.repositories import ExploreRepository
+
+        async def get_page(page: int):
+            emb = embeds[page-1]
+            n = len(datasets)
+            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+            return emb, n
+        
+        with ap.app_context():
+            repo = ExploreRepository()
+            datasets = ExploreRepository.filter(repo, query, sorting, publication_type.name.lower())
+            embeds = []
+            for dataset in datasets:
+                embeds.append(dataset_embed_slash(interaction, dataset))
+            if len(embeds) == 0:
+                await interaction.response.send_message(embed=default_embed(
+                    "We have not found any datasets that meet your search criteria. How about trying some others?", "No datasets found"))
+            else:
+                await Pagination(interaction, get_page).navigate()
 
     bot.run(token)

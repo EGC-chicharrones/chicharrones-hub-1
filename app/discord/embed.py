@@ -31,7 +31,7 @@ def help_embed_slash(interaction: discord.Interaction):
     return embed
 
 
-def default_embed(ctx, desc, title="UVLHUB.IO", name=None, field_desc=None, thumbnail=False):
+def default_embed(desc, title="UVLHUB.IO", name=None, field_desc=None, thumbnail=False):
     embed = discord.Embed(title=title, colour=discord.Colour(0x78dd1), description=desc, timestamp=datetime.datetime.now())
 
     if thumbnail: # TODO: Replace with uvlhub logo
