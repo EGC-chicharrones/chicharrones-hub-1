@@ -101,5 +101,11 @@ class DataSetForm(FlaskForm):
 
 
 class RatingForm(FlaskForm):
-    value = IntegerField('Value', validators=[DataRequired(), NumberRange(min=1, max=5)])
-    comment = TextAreaField('Comment', validators=[])
+    value = IntegerField('Puntuación', validators=[
+        DataRequired(message="La puntuación es obligatoria."),
+        NumberRange(min=1, max=5, message="La puntuación debe estar entre 1 y 5.")
+    ])
+    comment = TextAreaField('Comentario', validators=[
+        Optional()
+    ])
+    submit = SubmitField('Enviar')

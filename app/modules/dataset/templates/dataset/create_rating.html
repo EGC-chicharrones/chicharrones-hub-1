@@ -11,18 +11,15 @@
         <p>
             {{ form.value.label }}<br>
             {{ form.value(size=5) }}
-            {% if form.value.errors %}
-                <span style="color: red;">{{ form.value.errors[0] }}</span>
+            {% if errors and errors.value %}
+                <span style="color: red;">{{ errors.value }}</span>
             {% endif %}
         </p>
         <p>
             {{ form.comment.label }}<br>
             {{ form.comment(rows=4, cols=40) }}
-            {% if form.comment.errors %}
-                <span style="color: red;">{{ form.comment.errors[0] }}</span>
-            {% endif %}
         </p>
-        <p><button type="submit">Submit Rating</button></p>
+        <p><button type="submit">Enviar</button></p>
     </form>
 </body>
 </html>
