@@ -11,7 +11,7 @@ class ExploreRepository(BaseRepository):
         query = db.session.query(DataSet).join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None))
 
         filters = query_string.split(';')
-        filters = [f.split(':', 1) for f in filters if ':' in f]  # Validar formato correcto
+        filters = [f.split(':', 1) for f in filters if ':' in f]
 
         for key, value in filters:
             key = key.strip().lower()
@@ -20,7 +20,8 @@ class ExploreRepository(BaseRepository):
             if key == 'author':
                 query = query.join(Author).filter(Author.name.ilike(f'%{value}%'), DSMetaData.anonymized == "false")
             elif key == 'affiliation':
-                query = query.join(Author).filter(Author.affiliation.ilike(f'%{value}%'), DSMetaData.anonymized == "false")
+                query = query.join(Author).filter(Author.affiliation.ilike(f'%{value}%'),
+                                                  DSMetaData.anonymized == "false")
             elif key == 'orcid':
                 query = query.join(Author).filter(Author.orcid.ilike(f'%{value}%'), DSMetaData.anonymized == "false")
             elif key == 'doi':
@@ -55,10 +56,10 @@ class ExploreRepository(BaseRepository):
                     query = query.filter(DataSet.created_at >= value)
                 except ValueError:
                     continue
-            elif key == 'title':  
-                query = query.filter(DSMetaData.title.ilike(f'%{value}%'))
+
+        if not filters:
+            query = query.filter(DSMetaData.title.ilike(f'%{query_string.strip()}%'))
 
         query = query.order_by(DataSet.created_at.desc())
 
         return query.all()
-
