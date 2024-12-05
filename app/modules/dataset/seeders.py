@@ -64,6 +64,7 @@ class DataSetSeeder(BaseSeeder):
 
         datasets = [
             DataSet(
+                id=i+1,
                 user_id=user1.id if i % 2 == 0 else user2.id,
                 ds_meta_data_id=seeded_ds_meta_data[i].id,
                 created_at=datetime.now(timezone.utc)
