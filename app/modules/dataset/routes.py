@@ -12,6 +12,7 @@ from zipfile import ZipFile
 from app.modules.dataset.rating_service import RatingService
 
 from flask import (
+    flash,
     redirect,
     render_template,
     request,
@@ -435,16 +436,23 @@ def view_rating_form(dataset_id):
 
 
 
-@dataset_bp.route("/datasets/<int:dataset_id>/create/rating", methods=["GET","POST"])
+@dataset_bp.route("/datasets/<int:dataset_id>/create/rating", methods=["GET", "POST"])
 @login_required
 def create_rating(dataset_id):
     user_id = current_user.id
-    value = request.form.get('value')  
-    comment = request.form.get('comment')  
+    value = request.form.get('value')
+    comment = request.form.get('comment')
+
+    if not value or not value.isdigit() or not (1 <= int(value) <= 5):
+        flash("La puntuación es obligatoria y debe estar entre 1 y 5.", "error")
+        return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
+
     dataset = dataset_service.get_or_404(dataset_id)  
     ds_meta_data_id = dataset.ds_meta_data.id  
-    rating_service.create_rating(user_id, ds_meta_data_id, value, comment)
 
+    rating_service.create_rating(user_id, ds_meta_data_id, int(value), comment or None)
+
+    flash("Valoración creada con éxito.", "success")
     return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
 
 
