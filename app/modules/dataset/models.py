@@ -3,7 +3,6 @@ from enum import Enum
 
 from flask import request
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy import CheckConstraint
 
 from app import db
 
@@ -80,7 +79,7 @@ class DataSet(db.Model):
 
     ds_meta_data = db.relationship('DSMetaData', backref=db.backref('data_set', uselist=False))
     feature_models = db.relationship('FeatureModel', backref='data_set', lazy=True, cascade="all, delete")
-    
+
     def name(self):
         return self.ds_meta_data.title
 
@@ -169,12 +168,13 @@ class DOIMapping(db.Model):
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
 
+
 class DatasetRating(db.Model):
     __tablename__ = 'dataset_rating'
 
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.Integer, nullable=False)  
-    comment = db.Column(db.Text, nullable=True)  
+    value = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey('ds_meta_data.id'), nullable=False)
 
