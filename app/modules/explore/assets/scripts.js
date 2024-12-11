@@ -50,6 +50,26 @@ function send_query() {
                         document.getElementById("results_not_found").style.display = "none";
                     }
 
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className = 'btn btn-outline-primary btn-sm mb-3 btn-download-all';
+                    downloadButton.textContent = 'Download Results';
+                    downloadButton.addEventListener('click', () => {
+                        for (let i = 0; i < data.length; i++) {
+                        const url = `/dataset/download/${data[i].id}`;
+                        fetch(url).then(response => response.blob()).then(blob => {
+                            const downloadUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = data[i].title + '.zip';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(downloadUrl);
+                        });
+                        }
+                    })
+                    document.getElementById('results').appendChild(downloadButton);
+
 
                     data.forEach(dataset => {
                         let card = document.createElement('div');
