@@ -46,6 +46,18 @@ services:
     networks:
       - uvlhub_network
 
+  discord_bot:
+    container_name: discord_bot_container
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: python app/discord/bot.py
+    environment:
+      - DISCORD_TOKEN={{DISCORD_TOKEN}}
+    depends_on:
+      - db
+    restart: always
+
 volumes:
   db_data:
 
