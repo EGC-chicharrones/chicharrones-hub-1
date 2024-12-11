@@ -3,7 +3,7 @@ import logging
 from flask_login import current_user
 from typing import Optional
 
-from sqlalchemy import desc, func, orm
+from sqlalchemy import desc, func
 
 from app.modules.dataset.models import (
     Author,
@@ -11,8 +11,7 @@ from app.modules.dataset.models import (
     DSDownloadRecord,
     DSMetaData,
     DSViewRecord,
-    DataSet,
-    DatasetRating
+    DataSet
 )
 from core.repositories.BaseRepository import BaseRepository
 
@@ -129,5 +128,3 @@ class DOIMappingRepository(BaseRepository):
 
     def get_new_doi(self, old_doi: str) -> str:
         return self.model.query.filter_by(dataset_doi_old=old_doi).first()
-
-    
