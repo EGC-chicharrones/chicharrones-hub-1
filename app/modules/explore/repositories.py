@@ -29,7 +29,7 @@ class ExploreRepository(BaseRepository):
             elif key == 'min_size':
                 try:
                     min_size = int(value)
-                    query = query.filter(DSMetaData.total_file_size >= min_size)
+                    query = query.filter(DataSet.total_size_in_human_format >= min_size)
                 except ValueError:
                     continue
             elif key == 'max_size':
@@ -51,7 +51,7 @@ class ExploreRepository(BaseRepository):
                 query = query.filter(DSMetaData.anonymized == anon_filter)
             elif key == 'description':
                 query = query.filter(DSMetaData.description.ilike(f'%{value}%'))
-            elif key == 'date':
+            elif key == 'date':  # Formato yyyy/mm/dd
                 try:
                     query = query.filter(DataSet.created_at >= value)
                 except ValueError:
