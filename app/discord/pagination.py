@@ -15,8 +15,8 @@ class Pagination(discord.ui.View):
             return True
         else:
             emb = discord.Embed(
-                description=f"Only the author of the command can perform this action.",
-                color=discord.Colour(0x78dd1) # if it doesn't work, try 16711680
+                description="Only the author of the command can perform this action.",
+                color=discord.Colour(0x78dd1)  # if it doesn't work, try 16711680
             )
             await interaction.response.send_message(embed=emb, ephemeral=True)
             return False

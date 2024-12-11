@@ -47,9 +47,10 @@ def start_bot(name):
         async def get_page(page: int):
             emb = embeds[page-1]
             n = len(datasets)
-            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}",
+                           icon_url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
             return emb, n
-    
+
         with ap.app_context():
             repo = DataSetRepository()
             datasets = DataSetRepository.latest_synchronized(repo)
@@ -59,10 +60,10 @@ def start_bot(name):
                 embeds.append(dataset_embed_slash(interaction, dataset, user_profile))
             if len(embeds) == 0:
                 await interaction.response.send_message(embed=default_embed(
-                    "We have not found any datasets. This most likely means that there are none in the database.", 
+                    "We have not found any datasets. This most likely means that there are none in the database.",
                     "No datasets found"))
             await Pagination(interaction, get_page).navigate()
-    
+
     # Make a new publication_type enum that includes Any,
     # as this is not meant to be included in the original enum,
     # but is necessary for the bot.
@@ -73,7 +74,7 @@ def start_bot(name):
 
     @bot.tree.command(name="search_datasets",
                       description="Search for datasets by title, description, authors, tags, UVL files...")
-    async def slash_search_datasets(interaction: discord.Interaction, query: str, sorting: Literal["newest", "oldest"], 
+    async def slash_search_datasets(interaction: discord.Interaction, query: str, sorting: Literal["newest", "oldest"],
                                     publication_type: PublicationType):
         from app.modules.explore.repositories import ExploreRepository
         from app.modules.profile.models import UserProfile
@@ -81,9 +82,9 @@ def start_bot(name):
         async def get_page(page: int):
             emb = embeds[page-1]
             n = len(datasets)
-            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}", icon_url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+            emb.set_footer(text=f"UVLHUB.IO • Page {page} from {n}",
+                           icon_url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
             return emb, n
-        
         with ap.app_context():
             repo = ExploreRepository()
             datasets = ExploreRepository.filter(repo, query, sorting, publication_type.name.lower())
@@ -93,12 +94,13 @@ def start_bot(name):
                 embeds.append(dataset_embed_slash(interaction, dataset, user_profile))
             if len(embeds) == 0:
                 await interaction.response.send_message(embed=default_embed(
-                    "We have not found any datasets that meet your search criteria. How about trying some others?", "No datasets found"))
+                    "We have not found any datasets that meet your search criteria. How about trying some others?",
+                    "No datasets found"))
             else:
                 await Pagination(interaction, get_page).navigate()
 
-
-    @bot.tree.command(name="download_dataset", description="Obtain all UVL models from the dataset in a zip file. Not a final implementation.")
+    @bot.tree.command(name="download_dataset",
+                      description="Obtain all UVL models from the dataset in a zip file. Not a final implementation.")
     async def slash_download_dataset(interaction: discord.Interaction, dataset_id: int):
         from app.modules.dataset.services import DataSetService
 
@@ -116,14 +118,16 @@ def start_bot(name):
                             full_path = os.path.join(subdir, file)
                             relative_path = os.path.relpath(full_path, file_path)
                             zipf.write(full_path, arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path))
-                
+
                 return dataset, zip_path
-            
+
             try:
                 dataset, zip_path = download_dataset(dataset_id)
-                await interaction.response.send_message(file= discord.File(zip_path), 
-                    embed=default_embed("Here are the UVL models of the dataset you requested:", f"{dataset.name()} downloaded successfully"))
-            except:
+                await interaction.response.send_message(
+                    file=discord.File(zip_path),
+                    embed=default_embed("Here are the UVL models of the dataset you requested:",
+                                        f"{dataset.name()} downloaded successfully"))
+            except FileNotFoundError:
                 await interaction.response.send_message(
                     embed=default_embed("The dataset that you were looking for has not been found.", "Not Found"))
 
