@@ -26,18 +26,6 @@ class ExploreRepository(BaseRepository):
                 query = query.join(Author).filter(Author.orcid.ilike(f'%{value}%'), DSMetaData.anonymized == "false")
             elif key == 'doi':
                 query = query.filter(DSMetaData.publication_doi.ilike(f'%{value}%'))
-            elif key == 'min_size':
-                try:
-                    min_size = int(value)
-                    query = query.filter(DataSet.total_size_in_human_format >= min_size)
-                except ValueError:
-                    continue
-            elif key == 'max_size':
-                try:
-                    max_size = int(value)
-                    query = query.filter(DSMetaData.total_file_size <= max_size)
-                except ValueError:
-                    continue
             elif key == 'rating':
                 try:
                     min_rating = float(value)
