@@ -5,10 +5,11 @@ import shutil
 import tempfile
 import uuid
 import requests
+import re
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
-
+from core.configuration.configuration import USE_FAKENODO
 from app.modules.dataset.rating_service import RatingService
 
 from flask import (
@@ -34,7 +35,9 @@ from app.modules.dataset.services import (
     DataSetService,
     DOIMappingService,
 )
+from app.modules.fakenodo.services import FakenodoService
 from app.modules.zenodo.services import ZenodoService
+
 
 logger = logging.getLogger(__name__)
 rating_service = RatingService()
@@ -43,59 +46,179 @@ dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
+fakenodo_service = FakenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 dataset_rating_service= RatingService()
 
+
+# @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
+# @login_required
+# def create_dataset():
+#     form = DataSetForm()
+#     if request.method == "POST":
+
+#         dataset = None
+
+#         if not form.validate_on_submit():
+#             return jsonify({"message": form.errors}), 400
+
+#         try:
+#             logger.info("Creating dataset...")
+#             dataset = dataset_service.create_from_form(form=form, current_user=current_user)
+#             logger.info(f"Created dataset: {dataset}")
+#             dataset_service.move_feature_models(dataset)
+#         except Exception as exc:
+#             logger.exception(f"Exception while create dataset data in local {exc}")
+#             return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+
+#         if USE_FAKENODO:
+#             data = {}
+#             try:
+#                 fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+#                 response_data = json.dumps(fakenodo_response_json)
+#                 data = json.loads(response_data)
+#             except Exception as exc:
+#                 data = {}
+#                 fakenodo_response_json = {}
+#                 logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
+#             if data.get("conceptrecid"):
+#                 deposition_id = data.get("id")
+#                 # update dataset with deposition id in Fakenodo
+#                 dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+#                 try:
+#                     # iterate for each feature model (one feature model = one request to Fakenodo)
+#                     for feature_model in dataset.feature_models:
+#                         fakenodo_service.upload_file(dataset, deposition_id, feature_model)
+#                     # publish deposition
+#                     fakenodo_service.publish_deposition(deposition_id)
+#                     # update DOI
+#                     deposition_doi = fakenodo_service.get_doi(deposition_id)
+#                     dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+#                 except Exception as e:
+#                     msg = f"it has not been possible upload feature models in Fakenodo and update the DOI: {e}"
+#                     return jsonify({"message": msg}), 200
+#         else:
+#             # send dataset as deposition to Zenodo
+#             data = {}
+#             try:
+#                 zenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+#                 response_data = json.dumps(zenodo_response_json)
+#                 data = json.loads(response_data)
+#             except Exception as exc:
+#                 data = {}
+#                 zenodo_response_json = {}
+#                 logger.exception(f"Exception while create dataset data in Zenodo {exc}")
+#             if data.get("conceptrecid"):
+#                 deposition_id = data.get("id")
+#                 # update dataset with deposition id in Zenodo
+#                 dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+#                 try:
+#                     # iterate for each feature model (one feature model = one request to Zenodo)
+#                     for feature_model in dataset.feature_models:
+#                         fakenodo_service.upload_file(dataset, deposition_id, feature_model)
+#                     # publish deposition
+#                     fakenodo_service.publish_deposition(deposition_id)
+#                     # update DOI
+#                     deposition_doi = fakenodo_service.get_doi(deposition_id)
+#                     dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+#                 except Exception as e:
+#                     msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+#                     return jsonify({"message": msg}), 200
+
+#         # Delete temp folder
+#         file_path = current_user.temp_folder()
+#         if os.path.exists(file_path) and os.path.isdir(file_path):
+#             shutil.rmtree(file_path)
+
+#         msg = "Everything works!"
+#         return jsonify({"message": msg}), 200
+
+#     return render_template("dataset/upload_dataset.html", form=form, use_fakenodo=USE_FAKENODO)
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
 @login_required
 def create_dataset():
     form = DataSetForm()
     if request.method == "POST":
+
+        dataset = None
+
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
 
         try:
-            # Creación del dataset en local
+            logger.info("Creating dataset...")
             dataset = dataset_service.create_from_form(form=form, current_user=current_user)
+            logger.info(f"Created dataset: {dataset}")
             dataset_service.move_feature_models(dataset)
-
-            # Intento de envío a Zenodo
-            try:
-                zenodo_response_json = zenodo_service.create_new_deposition(dataset)
-                deposition_id = zenodo_response_json.get("id")
-                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
-
-                # Carga de modelos de características y publicación de la deposición
-                for feature_model in dataset.feature_models:
-                    zenodo_service.upload_file(dataset, deposition_id, feature_model)
-                zenodo_service.publish_deposition(deposition_id)
-
-                # Actualización del DOI
-                deposition_doi = zenodo_service.get_doi(deposition_id)
-                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
-
-            except Exception:
-                msg = "it has not been possible upload feature models in Zenodo and update the DOI"
-                return jsonify({"message": msg}), 200
-
-            except Exception as exc:
-                logger.exception(f"No se pudo subir a Zenodo o actualizar el DOI: {exc}")
-                return jsonify({"message": "No se pudo subir los modelos a Zenodo y actualizar el DOI"}), 200
-
-            # Eliminación del folder temporal
-            file_path = current_user.temp_folder()
-            if os.path.exists(file_path) and os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-
-            return jsonify({"message": "¡Todo funcionó correctamente!"}), 200
-
         except Exception as exc:
-            logger.exception(f"Error al crear dataset: {exc}")
+            logger.exception(f"Exception while create dataset data in local {exc}")
             return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
 
-    return render_template("dataset/upload_dataset.html", form=form)
+        if USE_FAKENODO:
+            data = {}
+            try:
+                fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+                response_data = json.dumps(fakenodo_response_json)
+                data = json.loads(response_data)
+            except Exception as exc:
+                data = {}
+                fakenodo_response_json = {}
+                logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
+            if data.get("conceptrecid"):
+                deposition_id = data.get("id")
+                # update dataset with deposition id in Fakenodo
+                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+                try:
+                    # iterate for each feature model (one feature model = one request to Fakenodo)
+                    for feature_model in dataset.feature_models:
+                        fakenodo_service.upload_file(dataset, deposition_id, feature_model)
+                    # publish deposition
+                    fakenodo_service.publish_deposition(deposition_id)
+                    # update DOI
+                    deposition_doi = fakenodo_service.get_doi(deposition_id)
+                    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+                except Exception as e:
+                    msg = f"it has not been possible upload feature models in Fakenodo and update the DOI: {e}"
+                    return jsonify({"message": msg}), 200
+        else:
+            # send dataset as deposition to Zenodo
+            data = {}
+            try:
+                zenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+                response_data = json.dumps(zenodo_response_json)
+                data = json.loads(response_data)
+            except Exception as exc:
+                data = {}
+                zenodo_response_json = {}
+                logger.exception(f"Exception while create dataset data in Zenodo {exc}")
+            if data.get("conceptrecid"):
+                deposition_id = data.get("id")
+                # update dataset with deposition id in Zenodo
+                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+                try:
+                    # iterate for each feature model (one feature model = one request to Zenodo)
+                    for feature_model in dataset.feature_models:
+                        fakenodo_service.upload_file(dataset, deposition_id, feature_model)
+                    # publish deposition
+                    fakenodo_service.publish_deposition(deposition_id)
+                    # update DOI
+                    deposition_doi = fakenodo_service.get_doi(deposition_id)
+                    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+                except Exception as e:
+                    msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+                    return jsonify({"message": msg}), 200
+
+        # Delete temp folder
+        file_path = current_user.temp_folder()
+        if os.path.exists(file_path) and os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
+        msg = "Everything works!"
+        return jsonify({"message": msg}), 200
+
+    return render_template("dataset/upload_dataset.html", form=form, use_fakenodo=USE_FAKENODO)
 
 
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])
@@ -113,94 +236,46 @@ def list_dataset():
 def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
+    publication_doi = request.form.get("publication_doi")
 
-    if file.filename.endswith(".zip"):
-        try:
-            # create temp folder
-            if not os.path.exists(temp_folder):
-                os.makedirs(temp_folder)
 
-            file_path = os.path.join(temp_folder, file.filename)
-            file.save(file_path)
+    if not file or not file.filename.endswith(".uvl"):
+        return jsonify({"message": "No valid file"}), 400
 
-            with ZipFile(file_path, "r") as zipf:
-                # Ignore directory structure
-                for member in zipf.namelist():
-                    filename = os.path.basename(member)
-                    if filename:
-                        source = zipf.open(member)
-                        # If an extracted file with the same name is already in the temp dir, give it a different name
-                        if os.path.exists(os.path.join(temp_folder, filename)):
-                            # Generate unique filename (by recursion)
-                            base_name, extension = os.path.splitext(member)
-                            i = 1
-                            while os.path.exists(
-                                os.path.join(temp_folder, f"{base_name} ({i}){extension}")
-                            ):
-                                i += 1
-                            new_filename = f"{base_name} ({i}){extension}".split("/")[-1]
-                            target = open(os.path.join(temp_folder, new_filename), "wb")
-                        else:
-                            target = open(os.path.join(temp_folder, filename), "wb")
+    if publication_doi:
+        # Regex to check the DOI format "10.xxxx"
+        if not re.match(r"^10.\d{4}$", publication_doi):
+            return jsonify({"message": "Invalid DOI format. Please enter a valid DOI like 10.xxxx"}), 400
 
-                        with source, target:
-                            shutil.copyfileobj(source, target)
-
-            # Delete all files that are not .uvl
-            for file in os.listdir(temp_folder):
-                if file[-4:] != ".uvl":
-                    os.remove(os.path.join(temp_folder, file))
-
-            return (
-                jsonify(
-                    {
-                        "message": "UVL uploaded and validated successfully",
-                        "filenames": os.listdir(temp_folder),
-                    }
-                ),
-                200,
-            )
-
-        except Exception as e:
-            return jsonify({"message": str(e)}), 500
-
+    # create temp folder
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
+    file_path = os.path.join(temp_folder, file.filename)
+    if os.path.exists(file_path):
+        # Generate unique filename (by recursion)
+        base_name, extension = os.path.splitext(file.filename)
+        i = 1
+        while os.path.exists(
+            os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+        ):
+            i += 1
+        new_filename = f"{base_name} ({i}){extension}"
+        file_path = os.path.join(temp_folder, new_filename)
     else:
-        if not file or not file.filename.endswith(".uvl"):
-            return jsonify({"message": "No valid file"}), 400
-
-        # create temp folder
-        if not os.path.exists(temp_folder):
-            os.makedirs(temp_folder)
-
-        file_path = os.path.join(temp_folder, file.filename)
-
-        if os.path.exists(file_path):
-            # Generate unique filename (by recursion)
-            base_name, extension = os.path.splitext(file.filename)
-            i = 1
-            while os.path.exists(
-                os.path.join(temp_folder, f"{base_name} ({i}){extension}")
-            ):
-                i += 1
-            new_filename = f"{base_name} ({i}){extension}"
-            file_path = os.path.join(temp_folder, new_filename)
-        else:
-            new_filename = file.filename
-
-        try:
-            file.save(file_path)
-        except Exception as e:
-            return jsonify({"message": str(e)}), 500
-
-        return (
-            jsonify(
-                {
-                    "message": "UVL uploaded and validated successfully",
-                    "filenames": [new_filename],
-                }
-            ),
-            200,
-        )
+        new_filename = file.filename
+    try:
+        file.save(file_path)
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+    return (
+        jsonify(
+            {
+                "message": "UVL uploaded and validated successfully",
+                "filename": new_filename,
+            }
+        ),
+        200,
+    )
 
 
 @dataset_bp.route("/dataset/file/upload_from_github", methods=["POST"])
