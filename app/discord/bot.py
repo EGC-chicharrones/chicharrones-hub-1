@@ -87,7 +87,7 @@ def start_bot(name):
             return emb, n
         with ap.app_context():
             repo = ExploreRepository()
-            datasets = ExploreRepository.filter(repo, query, sorting, publication_type.name.lower())
+            datasets = ExploreRepository.filter_old(repo, query, sorting, publication_type.name.lower())
             embeds = []
             for dataset in datasets:
                 user_profile = UserProfile.query.filter_by(user_id=dataset.user_id).first()
@@ -132,3 +132,7 @@ def start_bot(name):
                     embed=default_embed("The dataset that you were looking for has not been found.", "Not Found"))
 
     bot.run(token)
+
+
+if __name__ == "__main__":
+    start_bot(None)
