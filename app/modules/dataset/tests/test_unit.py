@@ -1,6 +1,7 @@
 import pytest
 
 from app import db
+from app.modules.auth.models import User
 from app.modules.conftest import login
 from io import BytesIO
 
@@ -17,6 +18,10 @@ def test_client(test_client):
     with test_client.application.app_context():
         # Add HERE new elements to the database that you want to exist in the test context.
         # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
+
+        user_test = User(email='user@example.com', password='test1234')
+        db.session.add(user_test)
+        db.session.commit()
 
         ds_metrics_test = DSMetrics(
             number_of_models="2",
