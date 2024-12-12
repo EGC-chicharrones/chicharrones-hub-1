@@ -11,7 +11,7 @@ from app.discord.embed import dataset_embed_slash, default_embed, help_embed, he
 from app.discord.pagination import Pagination
 
 
-def start_bot(name):
+def start_bot():
     # It is necessary to initialise the Flask app to be able to interact with it.
     # This will allow us to use repositories, services, and so forth.
     ap = app.create_app()
