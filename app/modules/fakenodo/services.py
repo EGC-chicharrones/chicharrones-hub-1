@@ -3,6 +3,7 @@ import hashlib
 import os
 
 from dotenv import load_dotenv
+from app.modules.dataset.repositories import DSMetaDataRepository
 from app.modules.fakenodo.repositories import DepositionRepo
 from app.modules.fakenodo.models import Deposition
 from app.modules.dataset.models import DataSet, DSMetaData
@@ -21,28 +22,14 @@ class FakenodoService(BaseService):
     def __init__(self):
         self.deposition_repository = DepositionRepo()
 
-    def create_new_deposition(self, ds_meta_data: DSMetaData) -> dict:
-        """
-        Create a new deposition in Fakenodo
-
-        Args:
-            dataset (Dataset): The dataset contain ing the necessary metadata
-
-        Returns:
-            dict: JSON format with the details of the deposition
-        """
-
+    def create_new_deposition(self, dataset: DataSet) -> dict:
+        ds_meta_data = dataset.ds_meta_data
         logger.info("Dataset sending to Fakenodo")
         logger.info(f"Publication type: {ds_meta_data.publication_type.value}")
-
         metadataJSON = {
             "title": ds_meta_data.title,
             "upload_type": "dataset" if ds_meta_data.publication_type.value == "none" else "publication",
-            "publication_type": (
-                ds_meta_data.publication_type.value
-                if ds_meta_data.publication_type.value != "none"
-                else None
-            ),
+            "publication_type": str(ds_meta_data.publication_type.value) if ds_meta_data.publication_type else None,
             "description": ds_meta_data.description,
             "creators": [
                 {
@@ -60,7 +47,7 @@ class FakenodoService(BaseService):
         }
 
         try:
-            deposition = self.deposition_repository.create_new_deposition(dep_metadata=metadataJSON)
+            deposition = self.deposition_repository.create_new_deposition(dep_metadata=metadataJSON, doi=ds_meta_data.publication_doi)
 
             return {
                 "id": deposition.id,
@@ -71,18 +58,6 @@ class FakenodoService(BaseService):
             raise Exception(f"Failed to create deposition in Fakenodo with error: {str(error400)}")
 
     def upload_file(self, dataset: DataSet, deposition_id: int, feature_model: FeatureModel, user=None):
-        """
-        Upload a file to a deposition in Fakenodo.
-
-        Args:
-            deposition_id (int): The ID of the deposition in Fakenodo.
-            feature_model (FeatureModel): The FeatureModel object representing the feature model.
-            user (FeatureModel): The User object representing the file owner.
-
-        Returns:
-            dict: The response in JSON format with the details of the uploaded file.
-        """
-
         uvl_filename = feature_model.fm_meta_data.uvl_filename
         user_id = current_user.id if user is None else user.id
         file_path = os.path.join(uploads_folder_name(), f"user_{str(user_id)}", f"dataset_{dataset.id}/", uvl_filename)
@@ -98,16 +73,6 @@ class FakenodoService(BaseService):
         return request
 
     def publish_deposition(self, deposition_id: int) -> dict:
-        """
-        Publish a deposition in Fakenodo.
-
-        Args:
-            deposition_id (int): The ID of the deposition in Fakenodo.
-
-        Returns:
-            dict: The response in JSON format with the details of the published deposition.
-        """
-
         deposition = Deposition.query.get(deposition_id)
         if not deposition:
             raise Exception("Error 404: Deposition not found")
@@ -129,15 +94,6 @@ class FakenodoService(BaseService):
             raise Exception(f"Failed to publish deposition with errors: {str(error)}")
 
     def get_deposition(self, deposition_id: int) -> dict:
-        """
-        Get a deposition from Fakenodo.
-
-        Args:
-            deposition_id (int): The ID of the deposition in Fakenodo.
-
-        Returns:
-            dict: The response in JSON format with the details of the deposition.
-        """
         deposition = Deposition.query.get(deposition_id)
         if not deposition:
             raise Exception("Deposition not found")
@@ -152,15 +108,6 @@ class FakenodoService(BaseService):
         return response
 
     def get_doi(self, deposition_id: int) -> str:
-        """
-        Get the DOI of a deposition from Fakenodo.
-
-        Args:
-            deposition_id (int): The ID of the deposition in Fakenodo.
-
-        Returns:
-            str: The DOI of the deposition.
-        """
         return self.get_deposition(deposition_id).get("doi")
 
 
