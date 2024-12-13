@@ -3,7 +3,6 @@ from enum import Enum
 
 from flask import request
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy import CheckConstraint
 
 from app import db
 
@@ -70,6 +69,19 @@ class DSMetaData(db.Model):
     rating_avg = db.Column(db.Float, default=0.0)
     anonymized = db.Column(db.Boolean, default=False)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "publication_type": self.publication_type.value,
+            "authors": [author.to_dict() for author in self.authors],
+            "tags": self.tags.split(",") if self.tags else [],
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "avg_rating": self.rating_avg,
+            "url": f"/dataset/{self.id}",
+        }
+
 
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,7 +92,7 @@ class DataSet(db.Model):
 
     ds_meta_data = db.relationship('DSMetaData', backref=db.backref('data_set', uselist=False))
     feature_models = db.relationship('FeatureModel', backref='data_set', lazy=True, cascade="all, delete")
-    
+
     def name(self):
         return self.ds_meta_data.title
 
@@ -124,13 +136,14 @@ class DataSet(db.Model):
             'dataset_doi': self.ds_meta_data.dataset_doi,
             'tags': self.ds_meta_data.tags.split(",") if self.ds_meta_data.tags else [],
             'url': self.get_uvlhub_doi(),
+            'avg_rating': self.ds_meta_data.rating_avg,
             'download': f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
             'zenodo': self.get_zenodo_url(),
             'files': [file.to_dict() for fm in self.feature_models for file in fm.files],
             'files_count': self.get_files_count(),
             'total_size_in_bytes': self.get_file_total_size(),
             'total_size_in_human_format': self.get_file_total_size_for_human(),
-            # 'ratings': [rating.to_dict() for rating in self.ratings],
+            'anonymized': self.ds_meta_data.anonymized,
         }
 
     def __repr__(self):
@@ -169,12 +182,13 @@ class DOIMapping(db.Model):
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
 
+
 class DatasetRating(db.Model):
     __tablename__ = 'dataset_rating'
 
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.Integer, nullable=False)  
-    comment = db.Column(db.Text, nullable=True)  
+    value = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey('ds_meta_data.id'), nullable=False)
 

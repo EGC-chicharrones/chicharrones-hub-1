@@ -1,7 +1,5 @@
 from app.modules.dataset.models import DatasetRating
 from core.repositories.BaseRepository import BaseRepository
-from typing import Optional
-from sqlalchemy import  func
 
 
 class RatingRepository(BaseRepository):

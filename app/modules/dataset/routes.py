@@ -1,6 +1,5 @@
 import logging
 import os
-import json
 import shutil
 import tempfile
 import uuid
@@ -12,6 +11,7 @@ from zipfile import ZipFile
 from app.modules.dataset.rating_service import RatingService
 
 from flask import (
+    flash,
     redirect,
     render_template,
     request,
@@ -22,7 +22,6 @@ from flask import (
     url_for,
 )
 from flask_login import login_required, current_user
-from app.modules.dataset.rating_service import RatingService
 from app.modules.dataset.forms import DataSetForm, RatingForm
 from app.modules.dataset.models import DSDownloadRecord
 from app.modules.dataset import dataset_bp
@@ -45,7 +44,7 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
-dataset_rating_service= RatingService()
+dataset_rating_service = RatingService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -252,7 +251,6 @@ def upload_from_github():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
-
     return (
             jsonify(
                 {
@@ -340,6 +338,7 @@ def download_dataset(dataset_id):
 
     return resp
 
+
 @dataset_bp.route("/dataset/download/all", methods=["GET"])
 def download_all_datasets():
     # Obtener todos los IDs de datasets
@@ -360,7 +359,7 @@ def download_all_datasets():
                 for file in files:
                     full_path = os.path.join(subdir, file)
                     relative_path = os.path.relpath(full_path, file_path)
-                    
+
                     # Añadir al ZIP
                     zipf.write(full_path, arcname=relative_path)
 
@@ -396,6 +395,7 @@ def download_all_datasets():
 
     return resp
 
+
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
     new_doi = doi_mapping_service.get_new_doi(doi)
@@ -430,21 +430,27 @@ def view_rating_form(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
     ds_meta_data_id = dataset.ds_meta_data.id
     ratings = rating_service.get_ratings(ds_meta_data_id)
-    
+
     return render_template('dataset/view_ratings.html', form=form, dataset=dataset, ratings=ratings)
 
 
-
-@dataset_bp.route("/datasets/<int:dataset_id>/create/rating", methods=["GET","POST"])
+@dataset_bp.route("/datasets/<int:dataset_id>/create/rating", methods=["GET", "POST"])
 @login_required
 def create_rating(dataset_id):
     user_id = current_user.id
-    value = request.form.get('value')  
-    comment = request.form.get('comment')  
-    dataset = dataset_service.get_or_404(dataset_id)  
-    ds_meta_data_id = dataset.ds_meta_data.id  
-    rating_service.create_rating(user_id, ds_meta_data_id, value, comment)
+    value = request.form.get('value')
+    comment = request.form.get('comment')
 
+    if not value or not value.isdigit() or not (1 <= int(value) <= 5):
+        flash("La puntuación es obligatoria y debe estar entre 1 y 5.", "error")
+        return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
+
+    dataset = dataset_service.get_or_404(dataset_id)
+    ds_meta_data_id = dataset.ds_meta_data.id
+
+    rating_service.create_rating(user_id, ds_meta_data_id, int(value), comment or None)
+
+    flash("Valoración creada con éxito.", "success")
     return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
 
 
@@ -464,6 +470,11 @@ def change_anonymize_unsync(dataset_id):
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
 
     return change_anonymize(dataset)
+
+
+@dataset_bp.route('/dataset/chatbot', methods=['GET'])
+def chatbot():
+    return render_template('dataset/chatbot.html')
 
 
 def change_anonymize(dataset):

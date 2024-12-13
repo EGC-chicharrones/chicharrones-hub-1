@@ -4,9 +4,9 @@ from app.modules.hubfile.models import Hubfile
 
 
 class HubfileSeeder(BaseSeeder):
-    
+
     priority = 12
-    
+
     def run(self):
 
         data = [
@@ -16,6 +16,6 @@ class HubfileSeeder(BaseSeeder):
             Hubfile(id=4, name="model4.uvl", checksum="123", size=12, feature_model_id=4)
 
         ]
-        
+
         self.seed(data)
         db.session.commit()
