@@ -34,7 +34,7 @@ def test_upload_dataset_success(test_client):
 
     assert response.status_code == 200, "Upload was successful."
 
-    
+
 def test_chatbot_logged_in(test_client):
     """
     Test to access chatbot when the user is logged in.
@@ -54,6 +54,7 @@ def test_chatbot_logged_out(test_client):
 
     assert response.status_code == 302, "Acceso denegado, redirigiendo al login."
     assert b"login" in response.data, "La redirección debe ser hacia la página de login."
+
 
 def test_download_all_datasets(test_client):
     """
