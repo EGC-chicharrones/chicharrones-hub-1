@@ -1,4 +1,5 @@
 from core.seeders.BaseSeeder import BaseSeeder
+from app import db
 from app.modules.hubfile.models import Hubfile
 
 
@@ -24,3 +25,4 @@ class HubfileSeeder(BaseSeeder):
         ]
 
         self.seed(data)
+        db.session.commit()
