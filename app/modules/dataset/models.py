@@ -169,6 +169,7 @@ class DOIMapping(db.Model):
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
 
+
 class DatasetRating(db.Model):
     __tablename__ = 'dataset_rating'
 
