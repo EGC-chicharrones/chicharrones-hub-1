@@ -68,6 +68,20 @@ class CombinedBehavior(TaskSet):
 
 class CombinedUser(HttpUser):
     tasks = [CombinedBehavior]
+    @task
+    def test_download_all_datasets(self):
+        """
+        Test de carga para /dataset/download/all.
+        """
+        response = self.client.get("/dataset/download/all")
+        if response.status_code == 200:
+            print("Download all datasets successful.")
+        else:
+            print(f"Failed to download datasets: {response.status_code}")
+
+
+class DatasetUser(HttpUser):
+    tasks = [DatasetBehavior]
     min_wait = 5000
     max_wait = 9000
     host = get_host_for_locust_testing()

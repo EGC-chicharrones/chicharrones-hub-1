@@ -1,0 +1,60 @@
+﻿Guide to Filtering Datasets in the Explore Interface
+Overview
+In the Explore page, users can search and filter datasets using various criteria such as title, description, authors, tags, file size, rating, and publication type. The interface provides an interactive form that lets users specify these filters, which are then used to refine the search results displayed on the page. Below are the keywords used for filtering datasets.
+________________
+
+
+Filtering Keywords in the Interface
+1. Search Query (Title, Description, etc.)
+* Keyword: query
+* How it Works: The user can type a search query, which will be matched against the title, description, or metadata of datasets.
+* Example: If the user types "AI research", the filter will look for datasets with "AI research" in their title or description.
+2. Filter by Author
+* Keyword: author:
+* How it Works: The user can filter datasets by specifying the author's name. The system will search for datasets associated with authors whose names match the provided input.
+* Example: Typing author: John Doe will return datasets written by John Doe.
+3. Filter by Minimum File Size
+* Keyword: min_size:
+* How it Works: Users can filter datasets based on a minimum file size.
+* Example: Typing min_size: 10000 will return datasets with a file size greater than or equal to 10,000 bytes.
+4. Filter by Maximum File Size
+* Keyword: max_size:
+* How it Works: Users can filter datasets based on a maximum file size.
+* Example: Typing max_size: 5000 will return datasets with a file size less than or equal to 5,000 bytes.
+5. Filter by Minimum Rating
+* Keyword: rating:
+* How it Works: Users can filter datasets based on a minimum rating. Only datasets with a rating greater than or equal to the specified value will be returned.
+* Example: Typing rating: 4.5 will return datasets with a rating of 4.5 or higher.
+6. Filter by Tags
+* Keyword: tags:
+* How it Works: Users can filter datasets based on tags. The filter looks for datasets with the specified tag(s) in their metadata.
+* Example: Typing tags: AI, machine learning will return datasets tagged with both "AI" and "machine learning".
+7. Filter by Anonymization Status
+* Keyword: anonymized:
+* How it Works: Users can filter datasets based on whether they are anonymized. The filter can check if a dataset is marked as anonymized or not.
+* Example: Typing anonymized: true will return datasets that are anonymized.
+8. Sort by Creation Date
+* Keyword: Sorting options newest and oldest
+* How it Works: Users can choose how the results should be sorted by creation date.
+   * newest: Results sorted from the newest to the oldest.
+   * oldest: Results sorted from the oldest to the newest.
+* Example: Choosing "Newest first" will display the most recent datasets first.
+________________
+
+
+Example Use Case:
+1. Search for Datasets by Title:
+If a user types "AI research", the system will look for datasets with "AI research" in the title or description.
+2. Filter by Author:
+If the user enters author: John Doe, the system filters the results to show datasets associated with the author "John Doe".
+3. Filter by Tags:
+If the user specifies tags: AI, machine learning, the system returns datasets tagged with both "AI" and "machine learning".
+4. Filter by Minimum Rating:
+If the user enters rating: 4.5, only datasets with a rating greater than or equal to 4.5 will be returned.
+5. Sort by Creation Date:
+If the user chooses "Newest first", the system will display the most recent datasets first.
+________________
+
+
+Conclusion
+These are the key keywords used in the filtering system to refine the search results for datasets. The filters allow users to search datasets based on a variety of parameters like title, author, tags, size, rating, and more.

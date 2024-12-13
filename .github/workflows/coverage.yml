@@ -1,18 +1,13 @@
-name: Codacy CI
+name: Upload coverage test results to Coveralls
 
 on:
-
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-
-  build:
-
+  pytest:
     runs-on: ubuntu-latest
 
     services:
@@ -27,39 +22,24 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-    strategy:
-      matrix:
-        python-version: ['3.12']
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Check for outdated dependencies
-      run: |
-        pip list --outdated
-   
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.12'
+
+    - name: Prepare environment
+      run: |
+        sed -i '/rosemary @ file:\/\/\/app/d' requirements.txt
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install coverage coveralls
 
-    - name: Security audit with pip-audit
-      run: |
-        pip install pip-audit
-        pip-audit || true
-
-    - name: Upload coverage to Codacy
-      run: |
-        pip install codacy-coverage
-        coverage run -m pytest app/modules/ --ignore-glob='*selenium*'
-        coverage xml 
-        python-codacy-coverage -r coverage.xml
+    - name: Run Tests with Coverage
       env:
         FLASK_ENV: testing
         MARIADB_HOSTNAME: 127.0.0.1
@@ -67,4 +47,12 @@ jobs:
         MARIADB_TEST_DATABASE: uvlhubdb_test
         MARIADB_USER: uvlhub_user
         MARIADB_PASSWORD: uvlhub_password
-        CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+      run: |
+        coverage run --source=app -m pytest app/modules/ --ignore-glob='*selenium*'
+
+    - name: Upload Coverage to Coveralls
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      run: |
+        coverage report
+        coveralls

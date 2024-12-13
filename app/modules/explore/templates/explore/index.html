@@ -48,7 +48,11 @@
                         <div class="col-12">
                             <div class="mb-3">
                                 <label class="form-label" for="query">
-                                    Search for datasets by title, description, authors, tags, UVL files...
+                                    Search for datasets by title, description, authors, tags, rating...
+                                    <a href="{{ url_for('static', filename='Guide_to_Searching_and_Filtering_Datasets.html') }}" target="_blank" class="ms-2">
+                                        View guide
+                                    </a>
+
                                 </label>
                                 <input class="form-control" id="query" name="query" required="" type="text"
                                        value="" autofocus>
