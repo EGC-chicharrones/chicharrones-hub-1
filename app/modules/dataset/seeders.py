@@ -15,6 +15,7 @@ from app.modules.dataset.models import (
 )
 from app import db
 
+
 class DataSetSeeder(BaseSeeder):
     priority = 2  # Prioridad más baja
 
@@ -69,6 +70,7 @@ class DataSetSeeder(BaseSeeder):
                 created_at=datetime.now(timezone.utc)
             ) for i in range(4)
         ]
+
         seeded_datasets = self.seed(datasets)
 
         ratings = []
