@@ -52,6 +52,69 @@ class DatasetBehavior(TaskSet):
         else:
             print(f"Failed to download datasets: {response.status_code}")
 
+    @task
+    def test_view_rating_form(self):
+        """
+        Test para ver el formulario de calificación y las calificaciones de un dataset.
+        """
+        dataset_id = 1  # Cambia esto al ID real del dataset que quieras probar
+        response = self.client.get(f"/dataset/rate/{dataset_id}/")
+
+        if response.status_code == 200:
+            print(f"Successfully retrieved rating form for dataset {dataset_id}.")
+        else:
+            print(f"Failed to retrieve rating form for dataset {dataset_id}: {response.status_code}")
+
+        if 'form' in response.text:
+            print("Rating form is present in the response.")
+        else:
+            print("Rating form is missing in the response.")
+
+        if 'ratings' in response.text:
+            print("Ratings are present in the response.")
+        else:
+            print("Ratings are missing in the response.")
+
+    @task
+    def test_create_rating(self):
+        """
+        Test para la creación de una calificación en un dataset.
+        """
+
+        dataset_id = 1
+
+        response = self.client.get(f"/datasets/{dataset_id}/create/rating")
+
+        if response.status_code == 200:
+            print(f"Successfully retrieved rating creation form for dataset {dataset_id}.")
+        else:
+            print(f"Failed to retrieve rating creation form for dataset {dataset_id}: {response.status_code}")
+            return
+
+        rating_value = 4
+        comment = "Excelente dataset, muy útil."
+
+        data = {
+            "value": rating_value,
+            "comment": comment
+        }
+
+        csrf_token = get_csrf_token(response)
+        data['csrf_token'] = csrf_token
+
+        response = self.client.post(f"/datasets/{dataset_id}/create/rating", data=data)
+
+        if response.status_code == 302:
+            print(f"Successfully created rating for dataset {dataset_id}.")
+            print(f"Redirected to: {response.headers['Location']}")
+        else:
+            print(f"Failed to create rating for dataset {dataset_id}: {response.status_code}")
+
+        if 'Valoración creada con éxito' in response.text:
+            print("Rating creation was successful, flash message received.")
+        else:
+            print("Rating creation failed or flash message not received.")
+
 
 class DatasetUser(HttpUser):
     tasks = [DatasetBehavior]
