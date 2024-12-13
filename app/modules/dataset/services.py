@@ -7,7 +7,6 @@ import uuid
 
 from flask import request, flash, redirect, render_template
 
-
 from app import db
 from app.modules.dataset.rating_repository import RatingRepository
 from app.modules.auth.services import AuthenticationService
