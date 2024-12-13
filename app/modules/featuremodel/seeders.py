@@ -86,7 +86,7 @@ class FeaturemodelSeeder(BaseSeeder):
                                 if counting_features:
                                     if counting_constraints is False and indent_level == 1:
                                         feature_count += 1
-                                                                                                                                                                                                              
+
                                 if counting_constraints:
                                     if indent_level == 1:
                                         constraint_count += 1
