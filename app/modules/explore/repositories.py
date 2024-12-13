@@ -4,7 +4,9 @@ import unidecode
 from app import db
 from app.modules.dataset.models import DSMetaData, DataSet, Author, PublicationType
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
+from app.modules.hubfile.models import Hubfile
 from core.repositories.BaseRepository import BaseRepository
+from sqlalchemy import func
 
 
 class ExploreRepository(BaseRepository):
@@ -48,6 +50,20 @@ class ExploreRepository(BaseRepository):
                     query = query.filter(DataSet.created_at >= value)
                 except ValueError:
                     continue
+            elif key == 'models':
+                query = query.join(FeatureModel).join(Hubfile) \
+                         .group_by(DataSet.id) \
+                         .having(func.count(Hubfile.id) >= value)
+
+            elif key == 'features':
+                query = query.join(FeatureModel).join(Hubfile) \
+                    .group_by(DataSet.id) \
+                    .having(func.sum(FeatureModel.features) >= value)
+
+            elif key == 'constraints':
+                query = query.join(FeatureModel).join(Hubfile) \
+                    .group_by(DataSet.id) \
+                    .having(func.sum(FeatureModel.constraints) >= value)
 
         if not filters:
             query = query.filter(DSMetaData.title.ilike(f'%{query_string.strip()}%'))
