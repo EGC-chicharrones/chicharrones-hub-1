@@ -34,3 +34,24 @@ def test_upload_dataset_success(test_client):
         follow_redirects=True)
 
     assert response.status_code == 200, "Upload was successful."
+
+
+def test_chatbot_logged_in(test_client):
+    """
+    Test to access chatbot when the user is logged in.
+    """
+    login_response = login(test_client, "user1@example.com", "1234")
+    assert login_response.status_code == 200, "Login was successful."
+
+    response = test_client.get("/dataset/chatbot")
+    assert response.status_code == 302
+
+
+def test_chatbot_logged_out(test_client):
+    """
+    Test to access chatbot when the user is logged out.
+    """
+    response = test_client.get("/dataset/chatbot")
+
+    assert response.status_code == 302, "Acceso denegado, redirigiendo al login."
+    assert b"login" in response.data, "La redirección debe ser hacia la página de login."
