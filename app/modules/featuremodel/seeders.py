@@ -10,11 +10,25 @@ class FeaturemodelSeeder(BaseSeeder):
     def run(self):
 
         datasets = db.session.query(DataSet).all()
-        data = []
-        id_fm = 1
-        for dataset in datasets:
-            data.append(FeatureModel(id=id_fm, data_set_id=dataset.id))
-            id_fm += 1
 
+        data = []
+        for dataset in datasets:
+            if dataset.id == 1:
+                data.append(FeatureModel(id=1, data_set_id=1))
+                data.append(FeatureModel(id=2, data_set_id=1))
+
+            elif dataset.id == 2:
+                data.append(FeatureModel(id=3, data_set_id=2))
+                data.append(FeatureModel(id=4, data_set_id=2))
+                data.append(FeatureModel(id=5, data_set_id=2))
+                data.append(FeatureModel(id=6, data_set_id=2))
+            elif dataset.id == 3:
+                data.append(FeatureModel(id=7, data_set_id=3))
+                data.append(FeatureModel(id=8, data_set_id=3))
+            else:
+                data.append(FeatureModel(id=9, data_set_id=4))
+                data.append(FeatureModel(id=10, data_set_id=4))
+                data.append(FeatureModel(id=11, data_set_id=4))
+                data.append(FeatureModel(id=12, data_set_id=4))
         self.seed(data)
         db.session.commit()

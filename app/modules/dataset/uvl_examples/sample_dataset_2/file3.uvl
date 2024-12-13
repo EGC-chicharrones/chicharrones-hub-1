@@ -13,7 +13,3 @@ features
         optional
             "Data Storage"
             "Media Player"
-
-constraints
-    Server => "Data Storage"
-    Video | Audio => "Media Player"
