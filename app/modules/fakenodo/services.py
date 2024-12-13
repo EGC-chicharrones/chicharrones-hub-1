@@ -3,10 +3,9 @@ import hashlib
 import os
 
 from dotenv import load_dotenv
-from app.modules.dataset.repositories import DSMetaDataRepository
 from app.modules.fakenodo.repositories import DepositionRepo
 from app.modules.fakenodo.models import Deposition
-from app.modules.dataset.models import DataSet, DSMetaData
+from app.modules.dataset.models import DataSet
 from app.modules.featuremodel.models import FeatureModel
 
 from core.configuration.configuration import uploads_folder_name
@@ -47,7 +46,8 @@ class FakenodoService(BaseService):
         }
 
         try:
-            deposition = self.deposition_repository.create_new_deposition(dep_metadata=metadataJSON, doi=ds_meta_data.publication_doi)
+            deposition = self.deposition_repository.create_new_deposition(dep_metadata=metadataJSON,
+                                                                          doi=ds_meta_data.publication_doi)
 
             return {
                 "id": deposition.id,

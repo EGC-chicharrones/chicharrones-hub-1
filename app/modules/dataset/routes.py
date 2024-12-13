@@ -65,63 +65,70 @@ def create_dataset():
             dataset = dataset_service.create_from_form(form=form, current_user=current_user)
             logger.info(f"Created dataset: {dataset}")
             dataset_service.move_feature_models(dataset)
+
+            # If the DOI input is blank, set the DOI to None instead of an empty string.
+            # That way, it remains untracked.
+            if form.dataset_doi._value() == "":
+                logger.info("Dataset DOI field was left blank - untracking dataset...")
+                dataset_service.update_dsmetadata(dataset.id, dataset_doi=None)
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
             return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
 
-        if USE_FAKENODO:
-            data = {}
-            try:
-                fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
-                response_data = json.dumps(fakenodo_response_json)
-                data = json.loads(response_data)
-            except Exception as exc:
+        if form.dataset_doi._value() != "":
+            if USE_FAKENODO:
                 data = {}
-                fakenodo_response_json = {}
-                logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
-            if data.get("conceptrecid"):
-                deposition_id = data.get("id")
-                # update dataset with deposition id in Fakenodo
-                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
                 try:
-                    # iterate for each feature model (one feature model = one request to Fakenodo)
-                    for feature_model in dataset.feature_models:
-                        fakenodo_service.upload_file(dataset, deposition_id, feature_model)
-                    # publish deposition
-                    fakenodo_service.publish_deposition(deposition_id)
-                    # update DOI
-                    deposition_doi = fakenodo_service.get_doi(deposition_id)
-                    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
-                except Exception as e:
-                    msg = f"it has not been possible upload feature models in Fakenodo and update the DOI: {e}"
-                    return jsonify({"message": msg}), 200
-        else:
-            # send dataset as deposition to Zenodo
-            data = {}
-            try:
-                zenodo_response_json = fakenodo_service.create_new_deposition(dataset)
-                response_data = json.dumps(zenodo_response_json)
-                data = json.loads(response_data)
-            except Exception as exc:
+                    fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+                    response_data = json.dumps(fakenodo_response_json)
+                    data = json.loads(response_data)
+                except Exception as exc:
+                    data = {}
+                    fakenodo_response_json = {}
+                    logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
+                if data.get("conceptrecid"):
+                    deposition_id = data.get("id")
+                    # update dataset with deposition id in Fakenodo
+                    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+                    try:
+                        # iterate for each feature model (one feature model = one request to Fakenodo)
+                        for feature_model in dataset.feature_models:
+                            fakenodo_service.upload_file(dataset, deposition_id, feature_model)
+                        # publish deposition
+                        fakenodo_service.publish_deposition(deposition_id)
+                        # update DOI
+                        deposition_doi = fakenodo_service.get_doi(deposition_id)
+                        dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+                    except Exception as e:
+                        msg = f"it has not been possible upload feature models in Fakenodo and update the DOI: {e}"
+                        return jsonify({"message": msg}), 200
+            else:
+                # send dataset as deposition to Zenodo
                 data = {}
-                zenodo_response_json = {}
-                logger.exception(f"Exception while create dataset data in Zenodo {exc}")
-            if data.get("conceptrecid"):
-                deposition_id = data.get("id")
-                # update dataset with deposition id in Zenodo
-                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
                 try:
-                    # iterate for each feature model (one feature model = one request to Zenodo)
-                    for feature_model in dataset.feature_models:
-                        fakenodo_service.upload_file(dataset, deposition_id, feature_model)
-                    # publish deposition
-                    fakenodo_service.publish_deposition(deposition_id)
-                    # update DOI
-                    deposition_doi = fakenodo_service.get_doi(deposition_id)
-                    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
-                except Exception as e:
-                    msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
-                    return jsonify({"message": msg}), 200
+                    zenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+                    response_data = json.dumps(zenodo_response_json)
+                    data = json.loads(response_data)
+                except Exception as exc:
+                    data = {}
+                    zenodo_response_json = {}
+                    logger.exception(f"Exception while create dataset data in Zenodo {exc}")
+                if data.get("conceptrecid"):
+                    deposition_id = data.get("id")
+                    # update dataset with deposition id in Zenodo
+                    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+                    try:
+                        # iterate for each feature model (one feature model = one request to Zenodo)
+                        for feature_model in dataset.feature_models:
+                            fakenodo_service.upload_file(dataset, deposition_id, feature_model)
+                        # publish deposition
+                        fakenodo_service.publish_deposition(deposition_id)
+                        # update DOI
+                        deposition_doi = fakenodo_service.get_doi(deposition_id)
+                        dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+                    except Exception as e:
+                        msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+                        return jsonify({"message": msg}), 200
 
         # Delete temp folder
         file_path = current_user.temp_folder()
@@ -330,7 +337,7 @@ def download_dataset(dataset_id):
                 zipf.write(full_path, arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path))
 
     user_cookie = request.cookies.get("download_cookie", str(uuid.uuid4()))
-    resp = make_response(send_from_directory(temp_dir, f"dataset_{dataset_id}.zip", 
+    resp = make_response(send_from_directory(temp_dir, f"dataset_{dataset_id}.zip",
                                              as_attachment=True, mimetype="application/zip"))
     resp.set_cookie("download_cookie", user_cookie)
 
@@ -387,10 +394,10 @@ def view_rating_form(dataset_id):
 @login_required
 def create_rating(dataset_id):
     user_id = current_user.id
-    value = request.form.get('value')  
-    comment = request.form.get('comment')  
-    dataset = dataset_service.get_or_404(dataset_id)  
-    ds_meta_data_id = dataset.ds_meta_data.id  
+    value = request.form.get('value')
+    comment = request.form.get('comment')
+    dataset = dataset_service.get_or_404(dataset_id)
+    ds_meta_data_id = dataset.ds_meta_data.id
     rating_service.create_rating(user_id, ds_meta_data_id, value, comment)
 
     return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
