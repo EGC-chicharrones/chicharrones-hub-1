@@ -1,36 +1,11 @@
-from bs4 import BeautifulSoup
 from locust import HttpUser, TaskSet, task
 from core.locust.common import get_csrf_token
 from core.environment.host import get_host_for_locust_testing
 
-class CombinedBehavior(TaskSet):
+
+class DatasetBehavior(TaskSet):
     def on_start(self):
-        self.view_rating_form()
-
-    @task
-    def view_rating_form(self):
-        dataset_id = 1
-        response = self.client.get(f"/dataset/rate/{dataset_id}/")
-        self.csrf_token = get_csrf_token(response)  # Almacenar el token CSRF en una variable de instancia
-        print(f"CSRF token obtained: {self.csrf_token}")  # Imprimir el token CSRF
-
-    @task
-    def create_rating(self):
-        if not hasattr(self, 'csrf_token'):
-            print("CSRF token not found. Skipping create_rating task.")
-            return
-
-        dataset_id = 1
-        data = {
-            "csrf_token": self.csrf_token,  # Usar el token CSRF almacenado
-            "value": "5",
-            "comment": "Great dataset!"
-        }
-        response = self.client.post(f"/datasets/{dataset_id}/create/rating", data=data)
-        if response.status_code != 200:
-            print(f"Failed to create rating: {response.status_code}")
-        else:
-            print("Rating created successfully")
+        self.dataset()
 
     @task
     def dataset(self):
@@ -66,8 +41,6 @@ class CombinedBehavior(TaskSet):
         else:
             print("Change anonymize (sync) successful")
 
-class CombinedUser(HttpUser):
-    tasks = [CombinedBehavior]
     @task
     def test_download_all_datasets(self):
         """
@@ -78,6 +51,69 @@ class CombinedUser(HttpUser):
             print("Download all datasets successful.")
         else:
             print(f"Failed to download datasets: {response.status_code}")
+
+    @task
+    def test_view_rating_form(self):
+        """
+        Test para ver el formulario de calificación y las calificaciones de un dataset.
+        """
+        dataset_id = 1  # Cambia esto al ID real del dataset que quieras probar
+        response = self.client.get(f"/dataset/rate/{dataset_id}/")
+
+        if response.status_code == 200:
+            print(f"Successfully retrieved rating form for dataset {dataset_id}.")
+        else:
+            print(f"Failed to retrieve rating form for dataset {dataset_id}: {response.status_code}")
+
+        if 'form' in response.text:
+            print("Rating form is present in the response.")
+        else:
+            print("Rating form is missing in the response.")
+
+        if 'ratings' in response.text:
+            print("Ratings are present in the response.")
+        else:
+            print("Ratings are missing in the response.")
+
+    @task
+    def test_create_rating(self):
+        """
+        Test para la creación de una calificación en un dataset.
+        """
+
+        dataset_id = 1
+
+        response = self.client.get(f"/datasets/{dataset_id}/create/rating")
+
+        if response.status_code == 200:
+            print(f"Successfully retrieved rating creation form for dataset {dataset_id}.")
+        else:
+            print(f"Failed to retrieve rating creation form for dataset {dataset_id}: {response.status_code}")
+            return
+
+        rating_value = 4
+        comment = "Excelente dataset, muy útil."
+
+        data = {
+            "value": rating_value,
+            "comment": comment
+        }
+
+        csrf_token = get_csrf_token(response)
+        data['csrf_token'] = csrf_token
+
+        response = self.client.post(f"/datasets/{dataset_id}/create/rating", data=data)
+
+        if response.status_code == 302:
+            print(f"Successfully created rating for dataset {dataset_id}.")
+            print(f"Redirected to: {response.headers['Location']}")
+        else:
+            print(f"Failed to create rating for dataset {dataset_id}: {response.status_code}")
+
+        if 'Valoración creada con éxito' in response.text:
+            print("Rating creation was successful, flash message received.")
+        else:
+            print("Rating creation failed or flash message not received.")
 
 
 class DatasetUser(HttpUser):
