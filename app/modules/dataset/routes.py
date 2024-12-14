@@ -7,11 +7,13 @@ import requests
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
+from app.modules.dataset.models import DSDownloadRecord
 from core.configuration.configuration import USE_FAKENODO
 from app.modules.dataset.rating_service import RatingService
 
 from flask import (
     flash,
+    json,
     redirect,
     render_template,
     request,
@@ -86,22 +88,18 @@ def create_dataset():
                     data = {}
                     fakenodo_response_json = {}
                     logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
-                if data.get("conceptrecid"):
-                    deposition_id = data.get("id")
-                    # update dataset with deposition id in Fakenodo
-                    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
-                    try:
-                        # iterate for each feature model (one feature model = one request to Fakenodo)
-                        for feature_model in dataset.feature_models:
-                            fakenodo_service.upload_file(dataset, deposition_id, feature_model)
-                        # publish deposition
-                        fakenodo_service.publish_deposition(deposition_id)
-                        # update DOI
-                        deposition_doi = fakenodo_service.get_doi(deposition_id)
-                        dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
-                    except Exception as e:
-                        msg = f"it has not been possible upload feature models in Fakenodo and update the DOI: {e}"
-                        return jsonify({"message": msg}), 200
+                deposition_id = data.get("id")
+                # update dataset with deposition id in Fakenodo
+                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+                try:
+                    # iterate for each feature model (one feature model = one request to Fakenodo)
+                    for feature_model in dataset.feature_models:
+                        fakenodo_service.upload_file(dataset, deposition_id, feature_model)
+                    # publish deposition
+                    fakenodo_service.publish_deposition(deposition_id)
+                except Exception as e:
+                    msg = f"it has not been possible upload feature models in Fakenodo and update the DOI: {e}"
+                    return jsonify({"message": msg}), 200
             else:
                 # send dataset as deposition to Zenodo
                 data = {}
