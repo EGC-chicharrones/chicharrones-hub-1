@@ -68,6 +68,7 @@ class DataSetSeeder(BaseSeeder):
                 created_at=datetime.now(timezone.utc)
             ) for i in range(4)
         ]
+
         self.seed(datasets)
 
         ratings = []

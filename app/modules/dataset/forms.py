@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 
 from wtforms import BooleanField, StringField, SelectField, FieldList, FormField
 from wtforms import SubmitField, TextAreaField, IntegerField
-from wtforms.validators import DataRequired, URL, Optional, NumberRange
+from wtforms.validators import DataRequired, Optional, NumberRange
 
 from app.modules.dataset.models import PublicationType
 
@@ -33,7 +33,7 @@ class FeatureModelForm(FlaskForm):
         choices=[(pt.value, pt.name.replace("_", " ").title()) for pt in PublicationType],
         validators=[Optional()],
     )
-    publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
+    publication_doi = StringField("Publication DOI", validators=[Optional()])
     tags = StringField("Tags (separated by commas)")
     version = StringField("UVL Version")
     authors = FieldList(FormField(AuthorForm))
@@ -64,8 +64,8 @@ class DataSetForm(FlaskForm):
         choices=[(pt.value, pt.name.replace("_", " ").title()) for pt in PublicationType],
         validators=[DataRequired()],
     )
-    publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
-    dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
+    publication_doi = StringField("Publication DOI", validators=[Optional()])
+    dataset_doi = StringField("Dataset DOI", validators=[Optional()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
     feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
