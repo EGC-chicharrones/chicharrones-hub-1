@@ -20,9 +20,11 @@ from flask import (
     make_response,
     abort,
     url_for,
+    send_file
 )
 from flask_login import login_required, current_user
 from app.modules.dataset.forms import DataSetForm, RatingForm
+from flamapy.metamodels.fm_metamodel.transformations import UVLReader, GlencoeWriter
 from app.modules.dataset.models import DSDownloadRecord
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.services import (
@@ -321,6 +323,62 @@ def download_dataset(dataset_id):
             as_attachment=True,
             mimetype="application/zip",
         )
+
+    existing_record = DSDownloadRecord.query.filter_by(
+        user_id=current_user.id if current_user.is_authenticated else None,
+        dataset_id=dataset_id,
+        download_cookie=user_cookie
+    ).first()
+
+    if not existing_record:
+        DSDownloadRecordService().create(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            dataset_id=dataset_id,
+            download_date=datetime.now(timezone.utc),
+            download_cookie=user_cookie,
+        )
+
+    return resp
+
+
+@dataset_bp.route("/dataset/download_glencoe/<int:dataset_id>", methods=["GET"])
+def export_dataset_to_glencoe(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+
+    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+
+    temp_dir = tempfile.mkdtemp()
+    zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}_glencoe.zip")
+
+    with ZipFile(zip_path, "w") as zipf:
+        for subdir, dirs, files in os.walk(file_path):
+            for file in files:
+                full_path = os.path.join(subdir, file)
+
+                fm = UVLReader(full_path).transform()
+
+                temp_file = tempfile.NamedTemporaryFile(suffix='.json', delete=False)
+                try:
+                    GlencoeWriter(temp_file.name, fm).transform()
+                    temp_file.close()
+
+                    relative_path = os.path.relpath(full_path, file_path)
+                    zipf.write(
+                        temp_file.name,
+                        arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path.replace('.uvl', '.json'))
+                    )
+                finally:
+                    os.remove(temp_file.name)
+
+    user_cookie = request.cookies.get("download_cookie")
+    if not user_cookie:
+        user_cookie = str(uuid.uuid4())
+        resp = make_response(
+            send_file(zip_path, as_attachment=True, mimetype="application/zip")
+        )
+        resp.set_cookie("download_cookie", user_cookie)
+    else:
+        resp = send_file(zip_path, as_attachment=True, mimetype="application/zip")
 
     existing_record = DSDownloadRecord.query.filter_by(
         user_id=current_user.id if current_user.is_authenticated else None,
