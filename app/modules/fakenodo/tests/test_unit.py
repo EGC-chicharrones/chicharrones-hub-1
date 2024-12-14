@@ -21,8 +21,8 @@ def test_client(test_client):
         db.session.commit()
 
         ds_metrics_test = DSMetrics(
-            number_of_models="2",
-            number_of_features="2"
+            number_of_models="1",
+            number_of_features="1"
         )
 
         ds_meta_data_test_1 = DSMetaData(
@@ -36,37 +36,16 @@ def test_client(test_client):
             ds_metrics=ds_metrics_test
         )
 
-        ds_meta_data_test_2 = DSMetaData(
-            deposition_id=170,
-            title="Test dataset, part 2",
-            description="It is better to test more",
-            publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
-            publication_doi="10.1235/test.doi",
-            dataset_doi="10.1235/dataset.doi",
-            tags="test2",
-            ds_metrics=ds_metrics_test
-        )
-
         dataset_test_1 = DataSet(
             user_id=1,
             ds_meta_data_id=1
-        )
-
-        dataset_test_2 = DataSet(
-            user_id=1,
-            ds_meta_data_id=2
         )
 
         feature_model_test_1 = FeatureModel(
             data_set_id=1
         )
 
-        feature_model_test_2 = FeatureModel(
-            data_set_id=2
-        )
-
-        db.session.add_all([ds_metrics_test, ds_meta_data_test_1, ds_meta_data_test_2, dataset_test_1,
-                            dataset_test_2, feature_model_test_1, feature_model_test_2])
+        db.session.add_all([ds_metrics_test, ds_meta_data_test_1, dataset_test_1, feature_model_test_1])
         db.session.commit()
         pass
 
