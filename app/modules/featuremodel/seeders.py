@@ -18,10 +18,10 @@ class FeaturemodelSeeder(BaseSeeder):
                                          constraints=self.counting_uvl_file("file1.uvl")[1]))
                 data.append(FeatureModel(id=2, data_set_id=1, features=self.counting_uvl_file("file2.uvl")[0],
                                          constraints=self.counting_uvl_file("file2.uvl")[1]))
+                data.append(FeatureModel(id=3, data_set_id=1, features=self.counting_uvl_file("file3.uvl")[0],
+                                         constraints=self.counting_uvl_file("file3.uvl")[1]))
 
             elif dataset.id == 2:
-                data.append(FeatureModel(id=3, data_set_id=2, features=self.counting_uvl_file("file3.uvl")[0],
-                                         constraints=self.counting_uvl_file("file3.uvl")[1]))
                 data.append(FeatureModel(id=4, data_set_id=2, features=self.counting_uvl_file("file4.uvl")[0],
                                          constraints=self.counting_uvl_file("file4.uvl")[1]))
                 data.append(FeatureModel(id=5, data_set_id=2, features=self.counting_uvl_file("file5.uvl")[0],
@@ -34,15 +34,17 @@ class FeaturemodelSeeder(BaseSeeder):
                                          constraints=self.counting_uvl_file("file7.uvl")[1]))
                 data.append(FeatureModel(id=8, data_set_id=3, features=self.counting_uvl_file("file8.uvl")[0],
                                          constraints=self.counting_uvl_file("file8.uvl")[1]))
-            else:
-                data.append(FeatureModel(id=9, data_set_id=4, features=self.counting_uvl_file("file9.uvl")[0],
+                data.append(FeatureModel(id=9, data_set_id=3, features=self.counting_uvl_file("file9.uvl")[0],
                                          constraints=self.counting_uvl_file("file9.uvl")[1]))
+
+            else:
                 data.append(FeatureModel(id=10, data_set_id=4, features=self.counting_uvl_file("file10.uvl")[0],
                                          constraints=self.counting_uvl_file("file10.uvl")[1]))
                 data.append(FeatureModel(id=11, data_set_id=4, features=self.counting_uvl_file("file11.uvl")[0],
                                          constraints=self.counting_uvl_file("file11.uvl")[1]))
                 data.append(FeatureModel(id=12, data_set_id=4, features=self.counting_uvl_file("file12.uvl")[0],
                                          constraints=self.counting_uvl_file("file12.uvl")[1]))
+
         self.seed(data)
         db.session.commit()
 
