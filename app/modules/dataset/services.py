@@ -76,6 +76,9 @@ class DataSetService(BaseService):
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return self.repository.get_unsynchronized_dataset(current_user_id, dataset_id)
 
+    def get_datasets_ids(self):
+        return self.repository.get_all_dataset_ids()
+
     def latest_synchronized(self):
         return self.repository.latest_synchronized()
 
@@ -230,7 +233,7 @@ class DOIMappingService(BaseService):
 class DatasetRatingService(BaseService):
     def __init__(self):
         super().__init__(RatingRepository())
-    
+
     def create_rating(self, user_id: int, dataset_id: int, value: int, comment: Optional[str] = None) -> DatasetRating:
         if not (0.0 <= value <= 5.0):
             raise ValueError("Rating must be between 0.0 and 5.0.")

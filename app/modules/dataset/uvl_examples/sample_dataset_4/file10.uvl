@@ -13,6 +13,7 @@ features
         optional
             "Data Storage"
             "Media Player"
+    GPS
 
 constraints
     Server => "Data Storage"

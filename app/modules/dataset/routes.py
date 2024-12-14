@@ -1,6 +1,5 @@
 import logging
 import os
-import json
 import shutil
 import tempfile
 import uuid
@@ -12,6 +11,7 @@ from core.configuration.configuration import USE_FAKENODO
 from app.modules.dataset.rating_service import RatingService
 
 from flask import (
+    flash,
     redirect,
     render_template,
     request,
@@ -324,6 +324,7 @@ def delete():
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
 def download_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
+
     file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
 
     temp_dir = tempfile.mkdtemp()
@@ -333,21 +334,108 @@ def download_dataset(dataset_id):
         for subdir, dirs, files in os.walk(file_path):
             for file in files:
                 full_path = os.path.join(subdir, file)
+
                 relative_path = os.path.relpath(full_path, file_path)
-                zipf.write(full_path, arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path))
 
-    user_cookie = request.cookies.get("download_cookie", str(uuid.uuid4()))
-    resp = make_response(send_from_directory(temp_dir, f"dataset_{dataset_id}.zip",
-                                             as_attachment=True, mimetype="application/zip"))
-    resp.set_cookie("download_cookie", user_cookie)
+                zipf.write(
+                    full_path,
+                    arcname=os.path.join(
+                        os.path.basename(zip_path[:-4]), relative_path
+                    ),
+                )
 
-    if not DSDownloadRecordService().exists(current_user.id, dataset_id, user_cookie):
+    user_cookie = request.cookies.get("download_cookie")
+    if not user_cookie:
+        user_cookie = str(
+            uuid.uuid4()
+        )
+        resp = make_response(
+            send_from_directory(
+                temp_dir,
+                f"dataset_{dataset_id}.zip",
+                as_attachment=True,
+                mimetype="application/zip",
+            )
+        )
+        resp.set_cookie("download_cookie", user_cookie)
+    else:
+        resp = send_from_directory(
+            temp_dir,
+            f"dataset_{dataset_id}.zip",
+            as_attachment=True,
+            mimetype="application/zip",
+        )
+
+    existing_record = DSDownloadRecord.query.filter_by(
+        user_id=current_user.id if current_user.is_authenticated else None,
+        dataset_id=dataset_id,
+        download_cookie=user_cookie
+    ).first()
+
+    if not existing_record:
         DSDownloadRecordService().create(
             user_id=current_user.id if current_user.is_authenticated else None,
             dataset_id=dataset_id,
             download_date=datetime.now(timezone.utc),
             download_cookie=user_cookie,
         )
+
+    return resp
+
+
+@dataset_bp.route("/dataset/download/all", methods=["GET"])
+def download_all_datasets():
+    # Obtener todos los IDs de datasets
+    dataset_ids = dataset_service.get_datasets_ids()
+
+    temp_dir = tempfile.mkdtemp()
+    zip_path = os.path.join(temp_dir, "all_datasets.zip")
+
+    # Crear el archivo ZIP
+    with ZipFile(zip_path, "w") as zipf:
+        for dataset_id in dataset_ids:
+            dataset = dataset_service.get_or_404(dataset_id)
+
+            # Ruta del dataset
+            file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+
+            for subdir, dirs, files in os.walk(file_path):
+                for file in files:
+                    full_path = os.path.join(subdir, file)
+                    relative_path = os.path.relpath(full_path, file_path)
+
+                    # Añadir al ZIP
+                    zipf.write(full_path, arcname=relative_path)
+
+    user_cookie = request.cookies.get("download_cookie")
+    if not user_cookie:
+        user_cookie = str(uuid.uuid4())
+
+    resp = make_response(
+        send_from_directory(
+            temp_dir,
+            "all_datasets.zip",
+            as_attachment=True,
+            mimetype="application/zip",
+        )
+    )
+    resp.set_cookie("download_cookie", user_cookie)
+
+    # Registrar descarga en la base de datos
+    for dataset_id in dataset_ids:
+        existing_record = DSDownloadRecord.query.filter_by(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            dataset_id=dataset_id,
+            download_cookie=user_cookie
+        ).first()
+
+        if not existing_record:
+            DSDownloadRecordService().create(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                dataset_id=dataset_id,
+                download_date=datetime.now(timezone.utc),
+                download_cookie=user_cookie,
+            )
 
     return resp
 
@@ -396,10 +484,17 @@ def create_rating(dataset_id):
     user_id = current_user.id
     value = request.form.get('value')
     comment = request.form.get('comment')
+
+    if not value or not value.isdigit() or not (1 <= int(value) <= 5):
+        flash("La puntuación es obligatoria y debe estar entre 1 y 5.", "error")
+        return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
+
     dataset = dataset_service.get_or_404(dataset_id)
     ds_meta_data_id = dataset.ds_meta_data.id
-    rating_service.create_rating(user_id, ds_meta_data_id, value, comment)
 
+    rating_service.create_rating(user_id, ds_meta_data_id, int(value), comment or None)
+
+    flash("Valoración creada con éxito.", "success")
     return redirect(url_for('dataset.view_rating_form', dataset_id=dataset_id))
 
 
@@ -419,6 +514,12 @@ def change_anonymize_unsync(dataset_id):
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
 
     return change_anonymize(dataset)
+
+
+@dataset_bp.route('/dataset/chatbot', methods=['GET'])
+@login_required
+def chatbot():
+    return render_template('dataset/chatbot.html')
 
 
 def change_anonymize(dataset):

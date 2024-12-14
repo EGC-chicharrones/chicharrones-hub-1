@@ -21,7 +21,10 @@ function send_query() {
                 query: document.querySelector('#query').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
-            };
+                models: document.querySelector('#models').value,
+                features: document.querySelector('#features').value,
+                constraints: document.querySelector('#constraints').value, 
+              };
 
             console.log(document.querySelector('#publication_type').value);
 
@@ -49,6 +52,26 @@ function send_query() {
                     } else {
                         document.getElementById("results_not_found").style.display = "none";
                     }
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className = 'btn btn-outline-primary btn-sm mb-3 btn-download-all';
+                    downloadButton.textContent = 'Download Results';
+                    downloadButton.addEventListener('click', () => {
+                        for (let i = 0; i < data.length; i++) {
+                        const url = `/dataset/download/${data[i].id}`;
+                        fetch(url).then(response => response.blob()).then(blob => {
+                            const downloadUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = data[i].title + '.zip';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(downloadUrl);
+                        });
+                        }
+                    })
+                    document.getElementById('results').appendChild(downloadButton);
 
 
                     data.forEach(dataset => {
@@ -86,9 +109,15 @@ function send_query() {
                                             </span>
                                         </div>
                                         <div class="col-md-8 col-12">
-                                            ${dataset.authors.map(author => `
-                                                <p class="p-0 m-0">${author.name}${author.affiliation ? ` (${author.affiliation})` : ''}${author.orcid ? ` (${author.orcid})` : ''}</p>
-                                            `).join('')}
+                                            ${dataset.anonymized ? 
+                                                '<p class="p-0 m-0">Anonymous</p>' : 
+                                                dataset.authors.map(author => `
+                                                    <p class="p-0 m-0">
+                                                        ${author.name}
+                                                        ${author.affiliation ? `(${author.affiliation})` : ''}
+                                                        ${author.orcid ? `(${author.orcid})` : ''}
+                                                    </p>
+                                                `).join('')}
                                         </div>
 
                                     </div>
@@ -104,6 +133,15 @@ function send_query() {
                                             ${dataset.tags.map(tag => `<span class="badge bg-primary me-1" style="cursor: pointer;" onclick="set_tag_as_query('${tag}')">${tag}</span>`).join('')}
                                         </div>
 
+                                    </div>
+
+                                    <div class="row mb-4">
+                                        <div class="col-md-4 col-12">
+                                            <span class=" text-secondary">
+                                            Rating: 
+                                            </span>
+                                            <span class="badge bg-warning text-dark">${dataset.avg_rating ? dataset.avg_rating.toFixed(1) : 0} /5 </span>
+                                        </div>
                                     </div>
 
                                     <div class="row">
@@ -178,6 +216,15 @@ function clearFilters() {
         option.checked = option.value == "newest"; // replace "default" with whatever your default value is
         // option.dispatchEvent(new Event('input', {bubbles: true}));
     });
+
+    let modelsInput = document.querySelector('#models');
+        modelsInput.value = "";
+    
+    let featuresInput = document.querySelector('#features');
+        featuresInput.value = "";
+    
+    let constraintsInput = document.querySelector('#constraints');
+        constraintsInput.value = "";
 
     // Perform a new search with the reset filters
     queryInput.dispatchEvent(new Event('input', {bubbles: true}));

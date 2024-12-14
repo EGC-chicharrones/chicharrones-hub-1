@@ -70,6 +70,13 @@ chico sundermann">
                             class="align-middle">Team</span>
                     </a>
                 </li>
+                {% if not current_user.is_anonymous %}
+                <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.chatbot' else '' }}">
+                    <a class="sidebar-link" href="{{ url_for('dataset.chatbot') }}">
+                        <i class="align-middle" data-feather="message-circle"></i> <span class="align-middle">Chatbot</span>
+                    </a>
+                </li>
+                {% endif %}
 
                 {% if current_user.is_anonymous %}
 
