@@ -21,7 +21,10 @@ function send_query() {
                 query: document.querySelector('#query').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
-            };
+                models: document.querySelector('#models').value,
+                features: document.querySelector('#features').value,
+                constraints: document.querySelector('#constraints').value, 
+              };
 
             console.log(document.querySelector('#publication_type').value);
 
@@ -193,6 +196,24 @@ function set_publication_type_as_query(publicationType) {
     publicationTypeSelect.dispatchEvent(new Event('input', {bubbles: true}));
 }
 
+function set_number_of_models_as_query(models) {
+    const modelsInput = document.getElementById('models');
+    modelsInput.value = models
+    modelsInput.dispatchEvent(new Event('input', {bubbles: true}));
+}
+
+function set_number_of_features_as_query(models) {
+    const featuresInput = document.getElementById('features');
+    featuresInput.value = models
+    featuresInput.dispatchEvent(new Event('input', {bubbles: true}));
+}
+
+function set_number_of_constraints_as_query(models) {
+    const constraintsInput = document.getElementById('constraints');
+    constraintsInput.value = models
+    constraintsInput.dispatchEvent(new Event('input', {bubbles: true}));
+}
+
 document.getElementById('clear-filters').addEventListener('click', clearFilters);
 
 function clearFilters() {
@@ -213,6 +234,15 @@ function clearFilters() {
         option.checked = option.value == "newest"; // replace "default" with whatever your default value is
         // option.dispatchEvent(new Event('input', {bubbles: true}));
     });
+
+    let modelsInput = document.querySelector('#models');
+        modelsInput.value = "";
+    
+    let featuresInput = document.querySelector('#features');
+        featuresInput.value = "";
+    
+    let constraintsInput = document.querySelector('#constraints');
+        constraintsInput.value = "";
 
     // Perform a new search with the reset filters
     queryInput.dispatchEvent(new Event('input', {bubbles: true}));

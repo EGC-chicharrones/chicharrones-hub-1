@@ -17,8 +17,11 @@ def index():
         query_string = criteria.get("query", "")  # Aquí obtenemos el 'query' como string
         publication_type = criteria.get("publication_type", "")
         sorting = criteria.get("sorting", "")
+        models = criteria.get("models", "")
+        features = criteria.get("features", "")
+        constraints = criteria.get("constraints", "")
         # Llamamos al servicio de exploración con el query_string procesado
-        datasets = ExploreService().filter(query_string, publication_type, sorting)
+        datasets = ExploreService().filter(query_string, publication_type, sorting, models, features, constraints)
         return jsonify([dataset.to_dict() for dataset in datasets])
 
 
