@@ -196,24 +196,6 @@ function set_publication_type_as_query(publicationType) {
     publicationTypeSelect.dispatchEvent(new Event('input', {bubbles: true}));
 }
 
-function set_number_of_models_as_query(models) {
-    const modelsInput = document.getElementById('models');
-    modelsInput.value = models
-    modelsInput.dispatchEvent(new Event('input', {bubbles: true}));
-}
-
-function set_number_of_features_as_query(models) {
-    const featuresInput = document.getElementById('features');
-    featuresInput.value = models
-    featuresInput.dispatchEvent(new Event('input', {bubbles: true}));
-}
-
-function set_number_of_constraints_as_query(models) {
-    const constraintsInput = document.getElementById('constraints');
-    constraintsInput.value = models
-    constraintsInput.dispatchEvent(new Event('input', {bubbles: true}));
-}
-
 document.getElementById('clear-filters').addEventListener('click', clearFilters);
 
 function clearFilters() {
