@@ -1,5 +1,5 @@
 import re
-from sqlalchemy import any_, or_
+from sqlalchemy import and_, any_, or_
 import unidecode
 from app import db
 from app.modules.dataset.models import DSMetaData, DSMetrics, DataSet, Author, PublicationType
@@ -64,26 +64,29 @@ class ExploreRepository(BaseRepository):
                     break
 
             if matching_type is not None:
-                query = query.filter(DSMetrics.publication_type == matching_type.name)
+                query = query.filter(DSMetaData.publication_type == matching_type.name)
 
         # Number of models, features and constraints filter
         models_filter = models.split(':', 1)[0].strip()
-        if models_filter != "":
-            query = query.join(FeatureModel).join(Hubfile) \
-                         .group_by(DataSet.id) \
-                         .having(func.count(Hubfile.id) == models_filter)
-
         features_filter = features.split(':', 1)[0].strip()
-        if features_filter != "":
-            query = query.join(FeatureModel).join(Hubfile) \
-                    .group_by(DataSet.id) \
-                    .having(func.sum(FeatureModel.features) == features_filter)
-
         constraints_filter = constraints.split(':', 1)[0].strip()
-        if constraints_filter != "":
-            query = query.join(FeatureModel).join(Hubfile) \
-                    .group_by(DataSet.id) \
-                    .having(func.sum(FeatureModel.constraints) == constraints_filter)
+
+        if models_filter != "" or features_filter != "" or constraints_filter != "":
+            query = query = query.join(FeatureModel).join(Hubfile).group_by(DataSet.id)
+
+            # Construir condiciones dinámicamente
+            having_conditions = []
+
+            if models_filter != "":
+                having_conditions.append(func.count(Hubfile.id) == int(models_filter))
+            if features_filter != "":
+                having_conditions.append(func.sum(FeatureModel.features) == int(features_filter))
+            if constraints_filter != "":
+                having_conditions.append(func.sum(FeatureModel.constraints) == int(constraints_filter))
+
+            # Aplicar condiciones con `and_` si hay alguna
+            if having_conditions:
+                query = query.having(and_(*having_conditions))
 
         # Order by created_at
         if sorting == "oldest":
