@@ -21,7 +21,10 @@ function send_query() {
                 query: document.querySelector('#query').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
-            };
+                models: document.querySelector('#models').value,
+                features: document.querySelector('#features').value,
+                constraints: document.querySelector('#constraints').value, 
+              };
 
             console.log(document.querySelector('#publication_type').value);
 
@@ -213,6 +216,15 @@ function clearFilters() {
         option.checked = option.value == "newest"; // replace "default" with whatever your default value is
         // option.dispatchEvent(new Event('input', {bubbles: true}));
     });
+
+    let modelsInput = document.querySelector('#models');
+        modelsInput.value = "";
+    
+    let featuresInput = document.querySelector('#features');
+        featuresInput.value = "";
+    
+    let constraintsInput = document.querySelector('#constraints');
+        constraintsInput.value = "";
 
     // Perform a new search with the reset filters
     queryInput.dispatchEvent(new Event('input', {bubbles: true}));
