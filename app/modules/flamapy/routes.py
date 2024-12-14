@@ -111,7 +111,7 @@ def to_cnf(file_id):
         DimacsWriter(temp_file.name, sat).transform()
 
         # Return the file in the response
-        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_cnf.txt')
+        return send_file(temp_file.name, as_attachment=True, download_name=hubfile.name.replace('.uvl', '.cnf'))
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)
