@@ -80,7 +80,7 @@ def to_glencoe(file_id):
         GlencoeWriter(temp_file.name, fm).transform()
 
         # Return the file in the response
-        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_glencoe.txt')
+        return send_file(temp_file.name, as_attachment=True, download_name=hubfile.name.replace('.uvl', '.json'))
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)
