@@ -13,7 +13,7 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter_datasets(self, query_string):
+    def filter_datasets(self, query_string, publication_type_string, sorting):
         query = db.session.query(DataSet).join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None))
 
         filters = query_string.split(';')
@@ -68,7 +68,22 @@ class ExploreRepository(BaseRepository):
         if not filters:
             query = query.filter(DSMetaData.title.ilike(f'%{query_string.strip()}%'))
 
-        query = query.order_by(DataSet.created_at.desc())
+        publication_filter = publication_type_string.split(':', 1)[0].strip()
+        if publication_filter != "any":
+            matching_type = None
+            for member in PublicationType:
+                if member.value.lower() == publication_filter:
+                    matching_type = member
+                    break
+
+            if matching_type is not None:
+                query = query.filter(DSMetaData.publication_type == matching_type.name)
+
+        # Order by created_at
+        if sorting == "oldest":
+            query = query.order_by(self.model.created_at.asc())
+        else:
+            query = query.order_by(self.model.created_at.desc())
 
         return query.all()
 
