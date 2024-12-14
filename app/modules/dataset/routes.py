@@ -25,6 +25,7 @@ from flask import (
 from flask_login import login_required, current_user
 from app.modules.dataset.forms import DataSetForm, RatingForm
 from flamapy.metamodels.fm_metamodel.transformations import UVLReader, GlencoeWriter
+from flamapy.metamodels.pysat_metamodel.transformations import FmToPysat, DimacsWriter
 from app.modules.dataset.models import DSDownloadRecord
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.services import (
@@ -379,6 +380,68 @@ def export_dataset_to_glencoe(dataset_id):
         resp.set_cookie("download_cookie", user_cookie)
     else:
         resp = send_file(zip_path, as_attachment=True, mimetype="application/zip")
+
+    existing_record = DSDownloadRecord.query.filter_by(
+        user_id=current_user.id if current_user.is_authenticated else None,
+        dataset_id=dataset_id,
+        download_cookie=user_cookie
+    ).first()
+
+    if not existing_record:
+        DSDownloadRecordService().create(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            dataset_id=dataset_id,
+            download_date=datetime.now(timezone.utc),
+            download_cookie=user_cookie,
+        )
+
+    return resp
+
+
+@dataset_bp.route("/dataset/download_cnf/<int:dataset_id>", methods=["GET"])
+def export_dataset_to_cnf(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+
+    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+
+    temp_dir = tempfile.mkdtemp()
+    zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}_dimacs.zip")
+
+    with ZipFile(zip_path, "w") as zipf:
+        for subdir, dirs, files in os.walk(file_path):
+            for file in files:
+                full_path = os.path.join(subdir, file)
+
+                temp_file = tempfile.NamedTemporaryFile(suffix='.cnf', delete=False)
+                try:
+                    fm = UVLReader(full_path).transform()
+                    sat = FmToPysat(fm).transform()
+                    DimacsWriter(temp_file.name, sat).transform()
+
+                    zipf.write(temp_file.name, arcname=os.path.join(os.path.basename(zip_path[:-4]),
+                                                                    file.replace('.uvl', '.cnf')))
+                finally:
+                    os.remove(temp_file.name)
+
+    user_cookie = request.cookies.get("download_cookie")
+    if not user_cookie:
+        user_cookie = str(uuid.uuid4())
+        resp = make_response(
+            send_from_directory(
+                temp_dir,
+                f"dataset_{dataset_id}_dimacs.zip",
+                as_attachment=True,
+                mimetype="application/zip",
+            )
+        )
+        resp.set_cookie("download_cookie", user_cookie)
+    else:
+        resp = send_from_directory(
+            temp_dir,
+            f"dataset_{dataset_id}_dimacs.zip",
+            as_attachment=True,
+            mimetype="application/zip",
+        )
 
     existing_record = DSDownloadRecord.query.filter_by(
         user_id=current_user.id if current_user.is_authenticated else None,
