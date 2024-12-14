@@ -473,6 +473,7 @@ def change_anonymize_unsync(dataset_id):
 
 
 @dataset_bp.route('/dataset/chatbot', methods=['GET'])
+@login_required
 def chatbot():
     return render_template('dataset/chatbot.html')
 
