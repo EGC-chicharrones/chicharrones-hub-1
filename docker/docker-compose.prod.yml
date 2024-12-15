@@ -50,18 +50,5 @@ services:
     command: --cleanup --interval 120 web_app_container
     restart: always
 
-  discord_bot:
-    container_name: discord_bot_container
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    command: python app/discord/bot.py
-    environment:
-      - DISCORD_TOKEN={{DISCORD_TOKEN}}
-    depends_on:
-      - db
-    restart: always
-
-
 volumes:
   db_data:

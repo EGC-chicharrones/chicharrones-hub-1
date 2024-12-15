@@ -1,8 +1,8 @@
 import re
-from sqlalchemy import any_, or_
+from sqlalchemy import and_, any_, or_
 import unidecode
 from app import db
-from app.modules.dataset.models import DSMetaData, DataSet, Author, PublicationType
+from app.modules.dataset.models import DSMetaData, DSMetrics, DataSet, Author, PublicationType
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
 from app.modules.hubfile.models import Hubfile
 from core.repositories.BaseRepository import BaseRepository
@@ -13,8 +13,8 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter_datasets(self, query_string):
-        query = db.session.query(DataSet).join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None))
+    def filter_datasets(self, query_string, publication_type_string, sorting, models, features, constraints):
+        query = db.session.query(DataSet).join(DSMetaData).join(DSMetrics).filter(DSMetaData.dataset_doi.isnot(None))
 
         filters = query_string.split(';')
         filters = [f.split(':', 1) for f in filters if ':' in f]
@@ -50,25 +50,49 @@ class ExploreRepository(BaseRepository):
                     query = query.filter(DataSet.created_at >= value)
                 except ValueError:
                     continue
-            elif key == 'models':
-                query = query.join(FeatureModel).join(Hubfile) \
-                         .group_by(DataSet.id) \
-                         .having(func.count(Hubfile.id) >= value)
-
-            elif key == 'features':
-                query = query.join(FeatureModel).join(Hubfile) \
-                    .group_by(DataSet.id) \
-                    .having(func.sum(FeatureModel.features) >= value)
-
-            elif key == 'constraints':
-                query = query.join(FeatureModel).join(Hubfile) \
-                    .group_by(DataSet.id) \
-                    .having(func.sum(FeatureModel.constraints) >= value)
 
         if not filters:
             query = query.filter(DSMetaData.title.ilike(f'%{query_string.strip()}%'))
 
-        query = query.order_by(DataSet.created_at.desc())
+        # Publication type filter
+        publication_filter = publication_type_string.split(':', 1)[0].strip()
+        if publication_filter != "any":
+            matching_type = None
+            for member in PublicationType:
+                if member.value.lower() == publication_filter:
+                    matching_type = member
+                    break
+
+            if matching_type is not None:
+                query = query.filter(DSMetaData.publication_type == matching_type.name)
+
+        # Number of models, features and constraints filter
+        models_filter = models.split(':', 1)[0].strip()
+        features_filter = features.split(':', 1)[0].strip()
+        constraints_filter = constraints.split(':', 1)[0].strip()
+
+        if models_filter != "" or features_filter != "" or constraints_filter != "":
+            query = query = query.join(FeatureModel).join(Hubfile).group_by(DataSet.id)
+
+            # Construir condiciones dinámicamente
+            having_conditions = []
+
+            if models_filter != "":
+                having_conditions.append(func.count(Hubfile.id) == int(models_filter))
+            if features_filter != "":
+                having_conditions.append(func.sum(FeatureModel.features) == int(features_filter))
+            if constraints_filter != "":
+                having_conditions.append(func.sum(FeatureModel.constraints) == int(constraints_filter))
+
+            # Aplicar condiciones con `and_` si hay alguna
+            if having_conditions:
+                query = query.having(and_(*having_conditions))
+
+        # Order by created_at
+        if sorting == "oldest":
+            query = query.order_by(self.model.created_at.asc())
+        else:
+            query = query.order_by(self.model.created_at.desc())
 
         return query.all()
 
