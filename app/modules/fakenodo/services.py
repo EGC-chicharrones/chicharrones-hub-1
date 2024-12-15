@@ -2,7 +2,7 @@ import logging
 import hashlib
 import os
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore
 from app.modules.fakenodo.repositories import DepositionRepo
 from app.modules.fakenodo.models import Deposition
 from app.modules.dataset.models import DataSet
@@ -10,7 +10,7 @@ from app.modules.featuremodel.models import FeatureModel
 
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
-from flask_login import current_user
+from flask_login import current_user   # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,9 @@ class FakenodoService(BaseService):
             "checksum": checksum(file_path),
             "message": f"File Uploaded to deposition with id {deposition_id}"
         }
+
+        if file_path is None:
+            raise FileNotFoundError
 
         return request
 
