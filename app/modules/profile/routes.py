@@ -1,4 +1,4 @@
-from app.modules.dataset.models import DataSet
+from app.modules.dataset.models import DSMetaData, DataSet
 from flask import render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
 
@@ -66,14 +66,20 @@ def user_profile(user_id):
     if user is None:
         abort(404)
 
-    user_datasets_pagination = db.session.query(DataSet) \
-        .filter(DataSet.user_id == user_id) \
+    user_datasets_pagination = db.session.query(DataSet).join(DSMetaData) \
+        .filter(DataSet.user_id == user_id,
+                DSMetaData.anonymized.is_(False),
+                DSMetaData.dataset_doi != ""
+                ) \
         .order_by(DataSet.created_at.desc()) \
         .paginate(page=page, per_page=per_page, error_out=False)
 
-    total_datasets_count = db.session.query(DataSet) \
-        .filter(DataSet.user_id == user_id) \
-        .count()
+    total_public_datasets_count = db.session.query(DataSet).join(DSMetaData) \
+        .filter(
+            DataSet.user_id == user_id,
+            DSMetaData.anonymized.is_(False),
+            DSMetaData.dataset_doi != ""
+        ).count()
 
     return render_template(
         'profile/view_user_profile.html',
@@ -81,5 +87,5 @@ def user_profile(user_id):
         user=user,
         datasets=user_datasets_pagination.items,
         pagination=user_datasets_pagination,
-        total_datasets=total_datasets_count,
+        total_datasets=total_public_datasets_count,
     )
