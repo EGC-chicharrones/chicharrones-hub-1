@@ -32,7 +32,6 @@ class ZenodoService(BaseService):
             ZENODO_API_URL = os.getenv("ZENODO_API_URL", "https://zenodo.org/api/deposit/depositions")
         else:
             ZENODO_API_URL = os.getenv("ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions")
-        FAKENODO_API_URL = "http://localhost/fakenodo/api"
 
         return ZENODO_API_URL
 
