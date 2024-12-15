@@ -154,6 +154,7 @@ def list_dataset():
 def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
+    new_files = set()  # This will be returned to prevent Dropzone from reading files that already exist
 
     if file.filename.endswith(".zip"):
         try:
@@ -170,20 +171,24 @@ def upload():
                     filename = os.path.basename(member)
                     if filename:
                         source = zipf.open(member)
+                        new_files.add(filename)
                         # If an extracted file with the same name is already in the temp dir, give it a different name
                         if os.path.exists(os.path.join(temp_folder, filename)):
                             # Generate unique filename (by recursion)
                             base_name, extension = os.path.splitext(member)
                             i = 1
                             while os.path.exists(
-                                os.path.join(temp_folder, f"{base_name} ({i}){extension}")
+                                os.path.join(temp_folder, f"{os.path.basename(base_name)} ({i}){extension}")
                             ):
                                 i += 1
-                            new_filename = f"{base_name} ({i}){extension}".split("/")[-1]
+                            # os.path.basename() is used to account for directory structure
+                            new_filename = f"{os.path.basename(base_name)} ({i}){extension}".split("/")[-1]
                             target = open(os.path.join(temp_folder, new_filename), "wb")
+                            # Change the name of the returned file
+                            new_files.add(new_filename)
+                            new_files.remove(filename)
                         else:
                             target = open(os.path.join(temp_folder, filename), "wb")
-
                         with source, target:
                             shutil.copyfileobj(source, target)
 
@@ -191,12 +196,14 @@ def upload():
             for file in os.listdir(temp_folder):
                 if file[-4:] != ".uvl":
                     os.remove(os.path.join(temp_folder, file))
+                    if file in new_files:
+                        new_files.remove(file)
 
             return (
                 jsonify(
                     {
                         "message": "UVL uploaded and validated successfully",
-                        "filenames": os.listdir(temp_folder),
+                        "filenames": sorted(list(new_files)),
                     }
                 ),
                 200,
