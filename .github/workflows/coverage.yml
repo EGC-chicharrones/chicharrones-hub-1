@@ -48,7 +48,7 @@ jobs:
         MARIADB_USER: uvlhub_user
         MARIADB_PASSWORD: uvlhub_password
       run: |
-        coverage run --source=app -m pytest app/modules/ --ignore-glob='*selenium*'
+        coverage run --source=app -m pytest app/modules/
 
     - name: Upload Coverage to Coveralls
       env:
