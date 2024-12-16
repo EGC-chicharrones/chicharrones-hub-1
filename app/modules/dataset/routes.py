@@ -11,6 +11,9 @@ from app.modules.dataset.models import DSDownloadRecord
 from core.configuration.configuration import USE_FAKENODO
 from app.modules.dataset.rating_service import RatingService
 
+from flamapy.metamodels.fm_metamodel.transformations import UVLReader, GlencoeWriter, SPLOTWriter
+from flamapy.metamodels.pysat_metamodel.transformations import FmToPysat, DimacsWriter
+
 from flask import (
     flash,
     json,
@@ -591,8 +594,36 @@ def download_all_datasets():
                     full_path = os.path.join(subdir, file)
                     relative_path = os.path.relpath(full_path, file_path)
 
-                    # Añadir al ZIP
-                    zipf.write(full_path, arcname=relative_path)
+                    # Añadir el archivo original al ZIP
+                    zipf.write(full_path, arcname=f"{relative_path}")
+
+                    # Generar y añadir formatos adicionales
+                    fm = UVLReader(full_path).transform()
+
+                    # Glencoe
+                    temp_glencoe = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
+                    try:
+                        GlencoeWriter(temp_glencoe.name, fm).transform()
+                        zipf.write(temp_glencoe.name, arcname=f"{relative_path}_glencoe.txt")
+                    finally:
+                        os.remove(temp_glencoe.name)
+
+                    # Splot
+                    temp_splot = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
+                    try:
+                        SPLOTWriter(temp_splot.name, fm).transform()
+                        zipf.write(temp_splot.name, arcname=f"{relative_path}_splot.txt")
+                    finally:
+                        os.remove(temp_splot.name)
+
+                    # CNF
+                    temp_cnf = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
+                    try:
+                        sat = FmToPysat(fm).transform()
+                        DimacsWriter(temp_cnf.name, sat).transform()
+                        zipf.write(temp_cnf.name, arcname=f"{relative_path}_cnf.txt")
+                    finally:
+                        os.remove(temp_cnf.name)
 
     user_cookie = request.cookies.get("download_cookie")
     if not user_cookie:
