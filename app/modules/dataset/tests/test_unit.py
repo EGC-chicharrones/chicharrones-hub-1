@@ -142,14 +142,13 @@ def test_upload_dataset_uvl_github_success(test_client):
 
     data = {
         # Valid UVL file found on GitHub as of writing this test.
-        "url": "https://github.com/Universal-Variability-Language/uvl-models/blob/main/"
-        + "Decision_Models/Mobile_Phone/dm_mobile_phone.csv.uvl"
+        "url": "https://github.com/Universal-Variability-Language/uvl-models/blob/"
+        + "main/Decision_Models/Mobile_Phone/dm_mobile_phone.csv.uvl"
     }
 
     response = test_client.post(
         "/dataset/file/upload_from_github",
-        data=data,
-        content_type="application/json",
+        json=data,
         follow_redirects=True)
 
     assert response.status_code == 200, "Upload was unsuccessful."
@@ -175,7 +174,6 @@ def test_upload_dataset_uvl_github_wrong_url_format(test_client):
             content_type="application/json")
 
         assert response.status_code == 400, "Upload was successful."
-    assert response.status_code == 200, "Upload was successful."
 
 
 def test_chatbot_logged_in(test_client):
