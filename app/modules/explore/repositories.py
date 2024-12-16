@@ -2,7 +2,7 @@ import re
 from sqlalchemy import and_, any_, or_
 import unidecode
 from app import db
-from app.modules.dataset.models import DSMetaData, DSMetrics, DataSet, Author, PublicationType
+from app.modules.dataset.models import DSMetaData, DataSet, Author, PublicationType
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
 from app.modules.hubfile.models import Hubfile
 from core.repositories.BaseRepository import BaseRepository
@@ -14,7 +14,7 @@ class ExploreRepository(BaseRepository):
         super().__init__(DataSet)
 
     def filter_datasets(self, query_string, publication_type_string, sorting, models, features, constraints):
-        query = db.session.query(DataSet).join(DSMetaData).join(DSMetrics).filter(DSMetaData.dataset_doi.isnot(None))
+        query = db.session.query(DataSet).join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None))
 
         filters = query_string.split(';')
         filters = [f.split(':', 1) for f in filters if ':' in f]
