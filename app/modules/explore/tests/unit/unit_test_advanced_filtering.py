@@ -29,7 +29,7 @@ def test_client_with_data(test_client):
     yield test_client
 
 
-'''def test_filter_by_models(test_client):
+'''def test_filter_by_features(test_client):
     # Realizar el login
     login_response = login(test_client, "user@example.com", "test1234")
     assert login_response.status_code == 200, "Login fue exitoso."
@@ -39,6 +39,56 @@ def test_client_with_data(test_client):
         "constraints": "",
         "features": "10",
         "models": "",
+        "publication_type": "any",
+        "query": "",
+        "sorting": "newest",
+    }
+
+    response = test_client.post("/explore", json=payload)
+    assert response.status_code == 200, "La respuesta fue exitosa."
+
+    # Convertir la respuesta JSON a un objeto de Python
+    datasets = response.get_json()
+    assert datasets is not None, "La respuesta debe contener datos en formato JSON."
+
+    assert len(datasets) == 1, "Debe haber exactamente un dataset en los resultados."'''
+
+
+'''def test_filter_by_constraints(test_client):
+    # Realizar el login
+    login_response = login(test_client, "user@example.com", "test1234")
+    assert login_response.status_code == 200, "Login fue exitoso."
+
+    # Configurar el payload para la solicitud POST
+    payload = {
+        "constraints": "5",
+        "features": "",
+        "models": "",
+        "publication_type": "any",
+        "query": "",
+        "sorting": "newest",
+    }
+
+    response = test_client.post("/explore", json=payload)
+    assert response.status_code == 200, "La respuesta fue exitosa."
+
+    # Convertir la respuesta JSON a un objeto de Python
+    datasets = response.get_json()
+    assert datasets is not None, "La respuesta debe contener datos en formato JSON."
+
+    assert len(datasets) == 1, "Debe haber exactamente un dataset en los resultados."'''
+
+
+'''def test_filter_by_models(test_client):
+    # Realizar el login
+    login_response = login(test_client, "user@example.com", "test1234")
+    assert login_response.status_code == 200, "Login fue exitoso."
+
+    # Configurar el payload para la solicitud POST
+    payload = {
+        "constraints": "",
+        "features": "",
+        "models": "1",
         "publication_type": "any",
         "query": "",
         "sorting": "newest",
