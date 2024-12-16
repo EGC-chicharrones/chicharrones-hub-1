@@ -11,9 +11,6 @@ from app.modules.dataset.models import DSDownloadRecord
 from core.configuration.configuration import USE_FAKENODO
 from app.modules.dataset.rating_service import RatingService
 
-from flamapy.metamodels.fm_metamodel.transformations import UVLReader, GlencoeWriter, SPLOTWriter
-from flamapy.metamodels.pysat_metamodel.transformations import FmToPysat, DimacsWriter
-
 from flask import (
     flash,
     json,
