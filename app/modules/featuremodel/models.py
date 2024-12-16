@@ -7,6 +7,8 @@ from app.modules.dataset.models import Author, PublicationType
 class FeatureModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_set_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=False)
+    features = db.Column(db.Integer, default=0)
+    constraints = db.Column(db.Integer, default=0)
     fm_meta_data_id = db.Column(db.Integer, db.ForeignKey('fm_meta_data.id'))
     files = db.relationship('Hubfile', backref='feature_model', lazy=True, cascade="all, delete")
     fm_meta_data = db.relationship('FMMetaData', uselist=False, backref='feature_model', cascade="all, delete")

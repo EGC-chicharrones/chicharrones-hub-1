@@ -1,15 +1,10 @@
 import os
-# import discord
 import threading
-
 from flask import Flask
-
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 from flask_migrate import Migrate
 from flask_mail import Mail
-
-# from discord.ext import commands
 
 from app.discord.bot import start_bot
 from core.configuration.configuration import get_app_version
@@ -77,8 +72,17 @@ def create_app(config_name='development'):
     return app
 
 
+def start_discord_bot():
+    try:
+        print("Starting Discord bot...")
+        start_bot()
+    except Exception as e:
+        print(f"Error running Discord bot: {e}")
+
+
+# Create Flask app instance
 app = create_app()
 
-# Run Discord bot
-x = threading.Thread(target=start_bot, args=(1,))
-x.start()
+# Start Discord bot in a separate thread
+bot_thread = threading.Thread(target=start_discord_bot, daemon=True)
+bot_thread.start()
