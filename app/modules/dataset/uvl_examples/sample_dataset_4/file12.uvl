@@ -13,8 +13,6 @@ features
         optional
             "Data Storage"
             "Media Player"
-    Bot
-    GPS
 
 constraints
     Server => "Data Storage"
