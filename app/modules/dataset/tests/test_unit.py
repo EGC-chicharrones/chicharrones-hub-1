@@ -6,16 +6,7 @@ from app.modules.auth.models import User
 from app.modules.dataset.seeders import DataSetSeeder
 from app.modules.dataset.services import DataSetService
 from app.modules.profile.models import UserProfile
-from app.modules.auth.models import User
-from app.modules.conftest import login
-from io import BytesIO
 from unittest.mock import MagicMock
-
-from app.modules.dataset.models import DSMetaData, DSMetrics, DataSet, PublicationType
-from app.modules.dataset.services import DataSetService
-from app.modules.featuremodel.models import FeatureModel
-from app.modules.dataset.seeders import DataSetSeeder
-from app.modules.profile.models import UserProfile
 
 
 @pytest.fixture(scope="module")
@@ -99,7 +90,7 @@ def test_upload_dataset_uvl_file_success(test_client):
     dataset_id = datasets[0].id
 
     assert dataset_id is not None, "Dataset ID should be present in the response."
-    
+
     # Cambios anonimizar usuario
     response = test_client.post(
         f"/dataset/anonymize/{dataset_id}/",
