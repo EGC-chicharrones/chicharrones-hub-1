@@ -49,12 +49,12 @@ Chicharrones-hub is an organization composed of two subgroups: **chicharrones-hu
 
 | Name                            |
 |---------------------------------|
-| Ignacio Blanquero Blanco        |
-| Adrián Cabello Martín         |
-| María de la Salud Carrera Talaverón |
-| Antonio Montero López         |
-| Natalia Olmo Villegas          |
-| David Vargas Jorba             |
+| [Ignacio Blanquero Blanco](https://github.com/ignblabla)        |
+| [Adrián Cabello Martín](https://github.com/Adrcabmar)         |
+| [María de la Salud Carrera Talaverón](https://github.com/maryycarrera) |
+| [Antonio Montero López](https://github.com/antonio-mz)         |
+| [Natalia Olmo Villegas](https://github.com/nataliaaolmo)          |
+| [David Vargas Jorba](https://github.com/vDavidd)             |
 
 ### Work items completed:
 
