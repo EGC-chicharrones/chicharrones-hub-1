@@ -38,7 +38,7 @@ def test_client(test_app):
         # Limpieza final
         db.session.remove()
         db.drop_all()
-        
+
 
 def test_count_datasets_success(test_client):
     """
@@ -95,7 +95,7 @@ def test_upload_dataset_uvl_file_success(test_client):
     response = test_client.post(
         f"/dataset/anonymize/{dataset_id}/",
         follow_redirects=True)
-    
+
     assert response.status_code == 200, 'Unable to change anonymize'
 
 
@@ -242,4 +242,3 @@ def test_calculate_avg_rating_positive(test_client):
     avg_rating = mock_repository.calculate_avg_rating(dataset_id)
 
     assert avg_rating == 4.5, f"Expected average rating of 4.5 for dataset_id {dataset_id}, but got {avg_rating}."
-
