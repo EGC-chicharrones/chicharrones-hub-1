@@ -80,7 +80,7 @@ def to_glencoe(file_id):
         GlencoeWriter(temp_file.name, fm).transform()
 
         # Return the file in the response
-        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_glencoe.txt')
+        return send_file(temp_file.name, as_attachment=True, download_name=hubfile.name.replace('.uvl', '.json'))
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)
@@ -95,7 +95,7 @@ def to_splot(file_id):
         SPLOTWriter(temp_file.name, fm).transform()
 
         # Return the file in the response
-        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_splot.txt')
+        return send_file(temp_file.name, as_attachment=True, download_name=hubfile.name.replace('.uvl', '.splx'))
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)
@@ -111,7 +111,7 @@ def to_cnf(file_id):
         DimacsWriter(temp_file.name, sat).transform()
 
         # Return the file in the response
-        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_cnf.txt')
+        return send_file(temp_file.name, as_attachment=True, download_name=hubfile.name.replace('.uvl', '.cnf'))
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)

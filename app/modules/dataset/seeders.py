@@ -1,9 +1,6 @@
-import os
 import random
 from datetime import datetime, timezone
 from app.modules.auth.models import User
-from app.modules.featuremodel.models import FMMetaData, FeatureModel
-from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 from app.modules.dataset.models import (
     DataSet,
@@ -14,6 +11,7 @@ from app.modules.dataset.models import (
     Author
 )
 from app import db
+
 
 class DataSetSeeder(BaseSeeder):
     priority = 2  # Prioridad más baja
@@ -64,12 +62,14 @@ class DataSetSeeder(BaseSeeder):
 
         datasets = [
             DataSet(
+                id=i+1,
                 user_id=user1.id if i % 2 == 0 else user2.id,
                 ds_meta_data_id=seeded_ds_meta_data[i].id,
                 created_at=datetime.now(timezone.utc)
             ) for i in range(4)
         ]
-        seeded_datasets = self.seed(datasets)
+
+        self.seed(datasets)
 
         ratings = []
         for dataset in ds_meta_data_list:
@@ -84,10 +84,11 @@ class DataSetSeeder(BaseSeeder):
                 ratings.append(rating)
 
         self.seed(ratings)
-        db.session.commit() 
+        db.session.commit()
 
         initialize_rating_avg()
         print("Dataset ratings successfully seeded.")
+
 
 def initialize_rating_avg():
     ds_meta_datas = DSMetaData.query.all()

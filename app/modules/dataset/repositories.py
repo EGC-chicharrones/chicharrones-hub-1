@@ -11,8 +11,7 @@ from app.modules.dataset.models import (
     DSDownloadRecord,
     DSMetaData,
     DSViewRecord,
-    DataSet,
-    DatasetRating
+    DataSet
 )
 from core.repositories.BaseRepository import BaseRepository
 
@@ -122,6 +121,10 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
+    def get_all_dataset_ids(self):
+        # Devuelve[(1,), (2,), (3,)] -->  [1,2,3]
+        return [row[0] for row in self.model.query.with_entities(self.model.id).all()]
+
 
 class DOIMappingRepository(BaseRepository):
     def __init__(self):
@@ -129,5 +132,3 @@ class DOIMappingRepository(BaseRepository):
 
     def get_new_doi(self, old_doi: str) -> str:
         return self.model.query.filter_by(dataset_doi_old=old_doi).first()
-
-    

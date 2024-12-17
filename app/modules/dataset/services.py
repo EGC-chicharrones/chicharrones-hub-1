@@ -76,6 +76,9 @@ class DataSetService(BaseService):
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return self.repository.get_unsynchronized_dataset(current_user_id, dataset_id)
 
+    def get_datasets_ids(self):
+        return self.repository.get_all_dataset_ids()
+
     def latest_synchronized(self):
         return self.repository.latest_synchronized()
 
@@ -147,7 +150,7 @@ class DataSetService(BaseService):
 
     def create_rating(dataset_id, user_id, value, comment=None) -> DatasetRating:
         try:
-        # Crea una nueva instancia de DatasetRating
+            # Crea una nueva instancia de DatasetRating
             rating = DatasetRating(
                 dataset_id=dataset_id,
                 user_id=user_id,
@@ -226,23 +229,24 @@ class DOIMappingService(BaseService):
         else:
             return None
 
+
 class DatasetRatingService(BaseService):
     def __init__(self):
         super().__init__(RatingRepository())
-    
+
     def create_rating(self, user_id: int, dataset_id: int, value: int, comment: Optional[str] = None) -> DatasetRating:
         if not (0.0 <= value <= 5.0):
             raise ValueError("Rating must be between 0.0 and 5.0.")
-        
-        return self.repository.create_rating(user_id, dataset_id, value,comment)
+
+        return self.repository.create_rating(user_id, dataset_id, value, comment)
 
     def calculate_avg_rating(self, dataset_id: int) -> float:
-        avg_rating= self.repository.calculate_avg_rating(dataset_id)
+        avg_rating = self.repository.calculate_avg_rating(dataset_id)
         if avg_rating:
             return avg_rating
         else:
             return None
-            
+
     def get_ratings(self, dataset_id: int) -> list[DatasetRating]:
         return self.repository.get_ratings_by_dataset_id(dataset_id)
 
