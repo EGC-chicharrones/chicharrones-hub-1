@@ -25,12 +25,12 @@ Chicharrones-hub is an organization composed of two subgroups: **chicharrones-hu
 
 | Name                       |
 |----------------------------|
-| Francisco Avilés Carrera |
-| Lorenzo Torralba Lanzas   |
-| Andrés Pizzano Cerrillos |
-| Diego José Pérez Vargas |
-| Francisco Pérez Manzano  |
-| Alexis Molins López      |
+| [Francisco Avilés Carrera](https://github.com/franavi) |
+| [Lorenzo Torralba Lanzas](https://github.com/lorenx16)   |
+| [Andrés Pizzano Cerrillos](https://github.com/andpizcer) |
+| [Diego José Pérez Vargas](https://github.com/DXD-Tech) |
+| [Francisco Pérez Manzano](https://github.com/FranciscoPerezUS)  |
+| [Alexis Molins López](https://github.com/alemollop)      |
 
 ### Work items completed:
 
