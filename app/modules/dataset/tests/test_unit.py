@@ -95,6 +95,8 @@ def test_upload_dataset_uvl_file_success(test_client):
     response = test_client.post(
         f"/dataset/anonymize/{dataset_id}/",
         follow_redirects=True)
+    
+    assert response.status_code == 200, 'Unable to change anonymize'
 
 
 def test_upload_dataset_uvl_github_success(test_client):
