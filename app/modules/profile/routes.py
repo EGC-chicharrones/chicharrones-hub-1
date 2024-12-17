@@ -20,7 +20,7 @@ def edit_profile():
     if request.method == "POST":
         service = UserProfileService()
         try:
-            service.update_profile(profile.id, form)
+            service.update_profile(profile.id, **form.data)
         except Exception as exc:
             return render_template("profile/edit.html", form=form, error=f"Error updating profile: {exc}")
 

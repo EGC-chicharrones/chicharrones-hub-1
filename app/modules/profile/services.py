@@ -10,15 +10,15 @@ class UserProfileService(BaseService):
         super().__init__(UserProfileRepository())
         self.user_repo = UserRepository()
 
-    def update_profile(self, user_profile_id, form, **kwargs):
+    def update_profile(self, user_profile_id, **kwargs):
 
         try:
-            name = form.name.data
-            surname = form.surname.data
-            affiliation = form.affiliation.data
-            orcid = form.orcid.data
-            is_developer = form.is_developer.data
-            github_username = form.github_username.data
+            name = kwargs.pop("name", None)
+            surname = kwargs.pop("surname", None)
+            affiliation = kwargs.pop("affiliation", None)
+            orcid = kwargs.pop("orcid", None)
+            is_developer = kwargs.pop("is_developer", None)
+            github_username = kwargs.pop("github_username", None)
 
             if not name:
                 raise ValueError("Name is required.")
