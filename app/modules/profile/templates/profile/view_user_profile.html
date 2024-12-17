@@ -85,19 +85,19 @@
                 <nav>
                     <ul class="pagination">
                         <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="{% if pagination.has_prev %}{{ url_for('profile.my_profile', page=pagination.prev_num) }}{% else %}# {% endif %}" aria-label="Previous">
+                            <a class="page-link" href="{% if pagination.has_prev %}{{ url_for('profile.user_profile', user_id=request.view_args.get('user_id') , page=pagination.prev_num) }}{% else %}# {% endif %}" aria-label="Previous">
                                 &laquo;
                             </a>
                         </li>
                         {% for num in pagination.iter_pages() %}
                         <li class="page-item {% if num == pagination.page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('profile.my_profile', page=num) }}">
+                            <a class="page-link" href="{{ url_for('profile.user_profile', user_id=request.view_args.get('user_id') ,page=num) }}">
                                 {{ num }}
                             </a>
                         </li>
                         {% endfor %}
                         <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="{% if pagination.has_next %}{{ url_for('profile.my_profile', page=pagination.next_num) }}{% else %}# {% endif %}" aria-label="Next">
+                            <a class="page-link" href="{% if pagination.has_next %}{{ url_for('profile.user_profile', user_id=request.view_args.get('user_id') , page=pagination.next_num) }}{% else %}# {% endif %}" aria-label="Next">
                                 &raquo;
                             </a>
                         </li>
