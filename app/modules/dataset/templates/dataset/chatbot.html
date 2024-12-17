@@ -1,13 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
+{% extends "base_template.html" %}
+
+{% block title %}Chatbot{% endblock %}
+
+{% block content %}
   <style>
     /* Estilos CSS */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f2f6fc;
+      /* Eliminar padding para que no haya margen alrededor */
       margin: 0;
-      padding: 20px;
+      padding: 0;
       color: #333;
     }
 
@@ -21,13 +24,14 @@
     }
 
     #chatContainer {
-      max-width: 800px;
-      margin: 0 auto;
+      /* Quitar max-width y margin auto para que ocupe todo el ancho */
+      width: 100%;
       background-color: #ffffff;
       border: 1px solid #ddd;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       padding: 20px;
+      box-sizing: border-box; /* Asegurarnos que padding no aumente el ancho total */
     }
 
     #chatDisplay {
@@ -118,7 +122,6 @@
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgb(0, 0, 0);
       background-color: rgba(0, 0, 0, 0.4);
       padding-top: 60px;
     }
@@ -161,8 +164,8 @@
       background-color: #e86a00;
     }
 
-        /* Estilos para el modal */
-        #warningModal {
+    /* Modal de advertencia */
+    #warningModal {
       display: none;
       position: fixed;
       top: 0;
@@ -174,7 +177,7 @@
       align-items: center;
     }
 
-    .modal-content {
+    #warningModal .modal-content {
       background-color: #fff;
       padding: 20px;
       border-radius: 8px;
@@ -197,8 +200,7 @@
       background-color: #e86a00;
     }
   </style>
-</head>
-<body>
+
   <header>
     <h1>Chat Google Gemini</h1>
   </header>
@@ -244,7 +246,7 @@
   <script type="module">
     import { GoogleGenerativeAI } from "@google/generative-ai";
 
-    const API_KEY = "AIzaSyBiFLtjoCgkYEbce0jT0Ra1DI2Ib2FvlLE";
+    const API_KEY = "TU_API_KEY_AQUI"; // Reemplaza con tu API KEY
     const genAI = new GoogleGenerativeAI(API_KEY);
 
     const chatDisplay = document.getElementById('chatDisplay');
@@ -289,19 +291,18 @@
       if (checkForBannedWords(userInput)) {
         inappropriateWordCount++;
         if (inappropriateWordCount >= 2) {
-          // Redirigir al inicio y borrar el chat
           alert("Has usado lenguaje inapropiado varias veces. Serás redirigido al inicio.");
-          window.location.href = '/';  // Redirigir a la página de inicio
-          chatDisplay.innerHTML = '';  // Borrar el chat
+          window.location.href = '/';
+          chatDisplay.innerHTML = '';
           return;
         } else {
-          // Mostrar modal de advertencia
           showWarningModal();
           return;
         }
-      }});
+      }
+    });
 
-      acceptButton.addEventListener('click', () => {
+    acceptButton.addEventListener('click', () => {
       hideWarningModal();
     });
 
@@ -310,7 +311,6 @@
       const remainingChars = 5000 - textLength;
       charCounter.innerText = `Caracteres restantes: ${remainingChars}`;
 
-      // Si los caracteres exceden el límite de 5000
       if (remainingChars < 0) {
         exceededWarning.style.visibility = 'visible';
         exceededWarning.innerText = `¡Has sobrepasado el límite de 5000 caracteres! Estás ${Math.abs(remainingChars)} caracteres por encima del límite.`;
@@ -319,21 +319,17 @@
       }
     });
 
-    // Función asíncrona que maneja el clic del botón
     generateButton.addEventListener('click', async (event) => {
       const userInput = inputText.value.trim();
       if (!userInput) return;
 
       const textLength = userInput.length;
-
-      // Si el texto excede los 5000 caracteres
       if (textLength > 5000) {
-        event.preventDefault();  // Previene que el mensaje sea enviado
-        exceededModal.style.display = 'block';  // Muestra el modal
+        event.preventDefault();
+        exceededModal.style.display = 'block';
         return;
       }
 
-      // Mostrar el mensaje del usuario en el chat
       appendMessage(userInput, 'user');
       inputText.value = '';
       charCounter.innerText = 'Caracteres restantes: 5000';
@@ -344,8 +340,6 @@
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(userInput);
         const response = await result.response;
-
-        // Mostrar la respuesta de la IA en el chat
         appendMessage(response.text(), 'ai');
         statusMessage.innerText = '';
       } catch (error) {
@@ -354,7 +348,6 @@
       }
     });
 
-    // Cerrar el modal de advertencia
     closeModal.onclick = () => {
       exceededModal.style.display = 'none';
     };
@@ -369,5 +362,4 @@
       }
     };
   </script>
-</body>
-</html>
+{% endblock %}
