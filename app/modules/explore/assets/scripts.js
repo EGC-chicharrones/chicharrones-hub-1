@@ -130,7 +130,7 @@ function send_query() {
                                             </span>
                                         </div>
                                         <div class="col-md-8 col-12">
-                                            ${dataset.tags.map(tag => `<span class="badge bg-primary me-1" style="cursor: pointer;" onclick="set_tag_as_query('${tag}')">${tag}</span>`).join('')}
+                                            ${dataset.tags.map(tag => `<span class="badge bg-primary me-1" style="cursor: pointer;" onclick="set_tag_as_query('tags:${tag}')">${tag}</span>`).join('')}
                                         </div>
 
                                     </div>
