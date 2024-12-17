@@ -97,6 +97,10 @@ def create_dataset():
                 try:
                     # iterate for each feature model (one feature model = one request to Fakenodo)
                     for feature_model in dataset.feature_models:
+                        features_constraints = counting_uvl_files(feature_model.files[0].name, dataset)
+                        dataset_service.update_featuremodel(feature_model.id,
+                                                            features=features_constraints[0],
+                                                            constraints=features_constraints[1])
                         fakenodo_service.upload_file(dataset, deposition_id, feature_model)
                     # publish deposition
                     fakenodo_service.publish_deposition(deposition_id)
@@ -749,3 +753,52 @@ def change_anonymize(dataset):
 
     # Redirigir al listado de datasets
     return redirect(url_for('dataset.list_dataset'))
+
+
+def counting_uvl_files(file_name, dataset):
+
+    feature_count = 0  # Contador de las características
+    constraint_count = 0  # Contador de restricciones
+    base_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+
+    # Recorremos los directorios y subdirectorios en busca del archivo específico
+    for root, dirs, files in os.walk(base_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            try:
+                if file == file_name:  # Compara el nombre del archivo
+                    with open(file_path, 'r') as f:
+                        lines = f.readlines()
+
+                        counting_features = False  # Flag para saber si estamos contando características
+                        counting_constraints = False  # Flag para saber si estamos contando restricciones
+
+                        for line in lines:
+                            stripped_line = line.strip()  # Elimina los espacios en blanco al principio y al final
+
+                            if not stripped_line:  # Si la línea está vacía, la ignoramos
+                                continue
+
+                            indent_level = len(line) - len(stripped_line)  # Número de caraceres blancos al inicio
+                            indent_level = indent_level // 4  # Suponemos 4 espacios por tabulación
+
+                            # Si encontramos "features", empezamos a contar
+                            if not counting_features and "features" in stripped_line.lower():
+                                counting_features = True
+                                continue
+
+                            # Si encontramos "constraints", empezamos a contar
+                            if not counting_constraints and "constraints" in stripped_line.lower():
+                                counting_constraints = True
+                                continue
+
+                            if counting_features:
+                                if counting_constraints is False and indent_level == 1:
+                                    feature_count += 1
+
+                            if counting_constraints:
+                                if indent_level == 1:
+                                    constraint_count += 1
+            except Exception as e:
+                print(f"Error leyendo el archivo {file_path}: {e}")
+    return feature_count, constraint_count
