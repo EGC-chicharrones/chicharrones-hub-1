@@ -1,176 +1,344 @@
 {% extends "base_template.html" %}
 
-{% block title %}Explore{% endblock %}
+{% block title %}Main page{% endblock %}
 
 {% block content %}
 
-    <h1 class="h2 mb-3"><b>Explore</b></h1>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  {% for category, message in messages %}
+    <div id="flash-message" class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+{% endwith %}
+    <h1 class="h2 mb-3">
+        {% if rating == undefined %}
+            <b>Latest</b> datasets
+        {% else %}
+            <b>Top 3</b> datasets
+        {% endif %}
+    </h1>
 
     <div class="row">
 
-        <h3 class="h3 mb-3">
-                <span id="results_number"></span>
-            </h3>
+        <div class="mb-2 col-xl-8 col-lg-12 col-md-12 col-sm-12">
 
-        <div class="col-lg-7 scrollable-column">
+            {% for dataset in datasets %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h2>
+
+                                <a href="{{ dataset.get_uvlhub_doi() }}">
+                                    {{ dataset.ds_meta_data.title }}
+                                </a>
+
+                            </h2>
+                            <div>
+                                <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
+                            </div>
+                        </div>
+                        <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+
+                        <div class="row mb-2">
+
+                            <div class="col-12">
+                                <p class="card-text">{{ dataset.ds_meta_data.description }}</p>
+                            </div>
+
+                        </div>
+
+                        <div class="row mb-2 mt-4">
+
+                            <div class="col-12">
+                                {% if not dataset.ds_meta_data.anonymized %}
+                                    {% for author in dataset.ds_meta_data.authors %}
+                                        <p class="p-0 m-0">
+                                            {{ author.name }}
+                                            {% if author.affiliation %}
+                                                ({{ author.affiliation }})
+                                            {% endif %}
+                                            {% if author.orcid %}
+                                                ({{ author.orcid }})
+                                            {% endif %}
+                                        </p>
+                                    {% endfor %}
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
+                            </div>
 
 
-            <div class="row">
+                        </div>
+                        <div class="row mb-2">
+                            <span class=" text-secondary">
+                                Uploaded by
+                            </span>
+                                {% if not dataset.ds_meta_data.anonymized %}
+                                <a href="profile/{{dataset.user.id}}">
+                                    {{ dataset.user.profile.surname }}, {{ dataset.user.profile.name }}
+                                </a>
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
+                                               
+                        </div>
+                        <div class="row mb-2">
 
-                <div id="results"></div>
+                            <div class="col-12">
+                                <a href="{{ dataset.get_uvlhub_doi() }}">{{ dataset.get_uvlhub_doi() }}</a>
+                                 <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
+                                {{ dataset.get_uvlhub_doi() }}
+                            </div>
 
-                <div class="col text-center" id="results_not_found">
-                    <img src="{{ url_for('static', filename='img/items/not_found.svg') }}"
-                         style="width: 50%; max-width: 100px; height: auto; margin-top: 30px"/>
-                    <p style="margin-top: 20px">
-                        We have not found any datasets that meet your search criteria. <br>How about trying some others?
-                    </p>
+                            <i data-feather="clipboard" class="center-button-icon"
+                               style="cursor: pointer"
+                               onclick="copyText('dataset_doi_uvlhub_{{ dataset.id }}')"></i>
+                            </div>
+
+
+
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4 col-12">
+                                <span class=" text-secondary">
+                                    Rating: 
+                                </span>
+                                <span class="badge bg-warning text-dark">{{ dataset.ds_meta_data.rating_avg }} /5</span> 
+                                <a href="{{ url_for('dataset.view_rating_form', dataset_id=dataset.id) }}" class="btn btn-outline-primary btn-sm ms-3" style="border-radius: 5px;">
+                                    <i data-feather="star" class="center-button-icon"></i> Ratings
+                                </a>
+                            </div>
+        
+                        </div>
+
+                        <div class="row mb-2">
+
+                            <div class="col-12">
+                                {% for tag in dataset.ds_meta_data.tags.split(',') %}
+                                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                        <div class="row  mt-4">
+                            <div class="col-12">
+                                <a href="{{ dataset.get_uvlhub_doi() }}" class="btn btn-outline-primary btn-sm"
+                                   style="border-radius: 5px;">
+                                    <i data-feather="eye" class="center-button-icon"></i>
+                                    View dataset
+                                </a>
+
+                                <a href="/dataset/download/{{ dataset.id }}" class="btn btn-outline-primary btn-sm"
+                                   style="border-radius: 5px;">
+                                    <i data-feather="download" class="center-button-icon"></i>
+                                    Download ({{ dataset.get_file_total_size_for_human() }})
+                                </a>
+                            </div>
+                        </div>
+
+
+                    </div>
                 </div>
+            {% endfor %}
 
-                <div id="results_not_found" style="text-align: center;">
+            <a href="/explore" class="btn btn-primary">
+                <i data-feather="search" class="center-button-icon"></i>
+                Explore more datasets
+            </a>
 
-                </div>
-
-
-            </div>
         </div>
 
-        <div class="col-lg-5 fixed-column" id="filters">
-
-            {{ form.hidden_tag() }}
+        <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
 
             <div class="row">
 
                 <div class="col-12">
 
-                    <div class="row">
+                <div class="card">
 
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label class="form-label" for="query">
-                                    Search for datasets by title, description, authors, tags, rating...
-                                    <a href="{{ url_for('static', filename='Guide_to_Searching_and_Filtering_Datasets.html') }}" target="_blank" class="ms-2">
-                                        View guide
-                                    </a>
+                    <div class="card-body">
 
-                                </label>
-                                <input class="form-control" id="query" name="query" required="" type="text"
-                                       value="" autofocus>
+                        <h2> <b>Hub statistics</b> </h2>
+                    
+                        <h1 class="h2 mb-3">
+                    
+                            <h4 class="h4 mb-3" class="stats-color">
+                                <i data-feather="database" class="align-middle mr-2 stats-color"></i>&nbsp;{{ datasets_counter }} datasets
+                            </h4>
+                    
+                            <h4 class="h4 mb-3" class="stats-color">
+                                <i data-feather="file" class="align-middle mr-2 stats-color"></i>&nbsp;{{ feature_models_counter }} feature models
+                            </h4>
+                    
+                            <h4 class="h4 mb-3" class="stats-color">
+                                <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_dataset_views }} datasets viewed
+                            </h4>
+                    
+                            <h4 class="h4 mb-3" class="stats-color">
+                                <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_feature_model_views }} feature models viewed
+                            </h4>
+                    
+                            <h4 class="h4 mb-3" class="stats-color">
+                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_dataset_downloads }} datasets downloaded
+                            </h4>
+                    
+                            <h4 class="h4" class="stats-color">
+                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_feature_model_downloads }} feature models downloaded
+                            </h4>
+                    
+                        </h1>
+                    
+                    </div>                    
+
+                </div>
+
+                
+            </div>
+
+            <div class="col-12">
+
+                <div class="card">
+
+                    <div class="card-body">
+                        <h2> <b>Download all datasets</b> </h2>
+
+                        <a href="/dataset/download/all" class="btn btn-primary mt-3" style="border-radius: 5px;">
+                            Download all
+                        </a>                    
+                    </div>
+                </div>
+            </div>
+
+                <div class="col-12">
+
+                    <div class="card">
+
+                        <div class="card-body">
+                    
+
+                    
+                            <h2> <b>Related publication</b> </h2>
+                            
+                            David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides. 
+                            <i>UVLHub: A feature model data repository using UVL and open science principles</i>,
+                            Journal of Systems and Software,
+                            2024,
+                            112150,
+                            ISSN 0164-1212,
+                            <a href="https://doi.org/10.1016/j.jss.2024.112150" target="_blank">https://doi.org/10.1016/j.jss.2024.112150</a>
+                    
+                        </div>
+                    
+                        <div class="card-body mt-0 pt-0">
+                    
+                            <button onclick="copyText('bibtex_cite')" class="btn btn-light" style="border-radius: 5px; margin-right: 10px">
+                                <i data-feather="clipboard" class="center-button-icon"></i>
+                                Copy in BibTex
+                            </button>
+                    
+                            <button onclick="copyText('ris_cite')" class="btn btn-light" style="border-radius: 5px;">
+                                <i data-feather="clipboard" class="center-button-icon"></i>
+                                Copy in RIS
+                            </button>
+                    
+                        </div>
+                    
+                    </div>
+                    
+
+                </div>
+
+                {% if current_user.is_anonymous %}
+
+                    <div class="col-12">
+                        <div class="card card-welcome">
+
+                            <h2 class="card-title card-title-light">
+                                Let's get started!
+                            </h2>
+
+                            <div class="card-body card-body-slim">
+
+                                What are you waiting for to upload your fantastic feature models in UVL format?
+
+                                <div class="row mt-2">
+
+                                    <div class="col-12">
+                                        <a href="/signup"
+                                           class="btn btn-dark"
+                                           style="background-color: #0662A6; border-color: #0662A6">
+                                            <i data-feather="user-plus" class="center-button-icon"></i>
+                                            Sign up
+                                        </a>
+                                    </div>
+
+                                    <div class="col-12 mt-2">
+                                        <a href="/login"
+                                           class="btn btn-outline-dark" style=" border-color: #0662A6">
+                                            <i data-feather="log-in" class="center-button-icon"></i>
+                                            I am already registered!
+                                        </a>
+                                    </div>
+
+                                </div>
+
+
                             </div>
+
+                        </div>
+                    </div>
+
+                {% endif %}
+
+                <div class="col-12">
+
+                    <div class="card card-dark">
+
+                        <h2 class="card-title card-title-light">
+                            What is <b>uvlhub.io</b>?
+                        </h2>
+
+                        <div class="card-body card-body-slim">
+
+                            <strong>uvlhub.io</strong> is a repository of feature models in UVL format integrated with
+                            Zenodo and FlamaPy developed by DiversoLab
+
                         </div>
 
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label class="form-label" for="publication_type">Filter by publication
-                                    type</label>
-                                <select class="form-control" id="publication_type" name="publication_type"
-                                        required="">
-                                    <option value="any">Any</option>
-                                    <option value="none">None</option>
-                                    <option value="annotationcollection">Annotation Collection</option>
-                                    <option value="book">Book</option>
-                                    <option value="section">Book Section</option>
-                                    <option value="conferencepaper">Conference Paper</option>
-                                    <option value="datamanagementplan">Data Management Plan</option>
-                                    <option value="article">Journal Article</option>
-                                    <option value="patent">Patent</option>
-                                    <option value="preprint">Preprint</option>
-                                    <option value="deliverable">Project Deliverable</option>
-                                    <option value="milestone">Project Milestone</option>
-                                    <option value="proposal">Proposal</option>
-                                    <option value="report">Report</option>
-                                    <option value="softwaredocumentation">Software Documentation</option>
-                                    <option value="taxonomictreatment">Taxonomic Treatment</option>
-                                    <option value="technicalnote">Technical Note</option>
-                                    <option value="thesis">Thesis</option>
-                                    <option value="workingpaper">Working Paper</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
+                        <h2 class="card-title card-title-light">
+                            Can I contribute?
+                        </h2>
+
+                        <div class="card-body card-body-slim">
+
+                            Sure! You can make a fork of our official repository on GitHub,
+                            create fantastic features and then make a pull request to us.
+
+                            <br><br>
+
+                            <a href="https://github.com/diverso-lab/uvlhub" target="_blank" class="btn btn-primary">
+                                Go to GitHub</a>
 
                         </div>
 
                     </div>
-
-                    <div class="row">
-
-                        <div class="col-6">
-
-                            <div>
-                                Sort results by creation date
-                                <label class="form-check">
-                                    <input class="form-check-input" type="radio" value="newest" name="sorting"
-                                           checked="">
-                                    <span class="form-check-label">
-                                      Newest first
-                                    </span>
-                                </label>
-                                <label class="form-check">
-                                    <input class="form-check-input" type="radio" value="oldest" name="sorting">
-                                    <span class="form-check-label">
-                                      Oldest first
-                                    </span>
-                                </label>
-                            </div>
-
-                        </div>
-                        <div class="col-6">
-                            <div>
-                                Filter results by number of models, features and constraints
-                                <div class="form-group">
-                                    <label for="models-input" class="form-label">Number of Models</label>
-                                    <input id="models" class="form-control" name="models" type="number" min="1" placeholder="Enter number of models">
-                                </div>
-                                <div class="form-group">
-                                    <label for="features-input" class="form-label">Number of Features</label>
-                                    <input id="features" class="form-control" name="features" type="number" min="1" placeholder="Enter number of features">
-                                </div>
-                                <div class="form-group">
-                                    <label for="constraints-input" class="form-label">Number of Constraints</label>
-                                    <input id="constraints" class="form-control" name="constraints" type="number" min="1" placeholder="Enter number of constraints">
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <div class="col-12">
-
-                            <div class="mt-3">
-
-                                <div id="authors">
-
-                                </div>
-
-                                <button id="clear-filters" class="btn btn-outline-primary">
-                                    <i data-feather="x-circle" style="vertical-align: middle; margin-top: -2px"></i>
-                                    Clear filters
-                                </button>
-
-
-                            </div>
-
-                        </div>
-                    </div>
-
                 </div>
 
             </div>
 
-            <div class="row">
-
-            </div>
 
         </div>
 
-
     </div>
-
 
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('explore.scripts') }}"></script>
+    <script src="{{ url_for('public.scripts') }}"></script>
 {% endblock %}
