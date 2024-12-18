@@ -58,6 +58,12 @@ chico sundermann">
                     </a>
                 </li>
 
+                <li class="sidebar-item {{ 'active' if request.endpoint == 'public.top_rating' else '' }}">
+                    <a class="sidebar-link" href="{{ url_for('public.top_rating') }}">
+                        <i class="align-middle" data-feather="star"></i> <span class="align-middle">Top 3 datasets</span>
+                    </a>
+                </li>
+
                 <li class="sidebar-item {{ 'active' if request.endpoint == 'explore.index' else '' }}">
                     <a class="sidebar-link" href="{{ url_for('explore.index') }}">
                         <i class="align-middle" data-feather="search"></i> <span class="align-middle">Explore</span>
